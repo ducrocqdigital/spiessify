@@ -105,119 +105,120 @@ const AddPenalty = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        <Card className="max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle>Neue Strafe</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Step 1: Select Member */}
-              <div className="space-y-2">
-                <Label htmlFor="member">1. Schütze auswählen</Label>
-                {loading ? (
-                  <div className="h-12 flex items-center justify-center border rounded-md">
-                    <span className="text-muted-foreground">Lade Schützen...</span>
-                  </div>
-                ) : members.length === 0 ? (
-                  <div className="h-12 flex items-center justify-center border rounded-md">
-                    <span className="text-muted-foreground">Keine aktiven Mitglieder</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto border rounded-md p-2">
-                    {members.map((member) => (
-                      <Button
-                        key={member.id}
-                        type="button"
-                        variant={memberId === member.id ? "default" : "outline"}
-                        className={`h-16 p-2 text-left justify-start transition-all duration-200 ${
-                          memberId === member.id 
-                            ? "bg-primary text-primary-foreground shadow-md scale-105" 
-                            : "hover:bg-primary/10 hover:scale-102"
-                        }`}
-                        onClick={() => setMemberId(member.id)}
-                      >
-                        <div className="flex flex-col w-full">
-                          <span className="font-medium text-sm leading-tight">
-                            {member.first_name}
-                          </span>
-                          <span className="font-medium text-sm leading-tight">
-                            {member.last_name}
-                          </span>
-                          {member.nickname && (
-                            <span className="text-xs opacity-70 leading-tight">
-                              "{member.nickname}"
-                            </span>
-                          )}
-                        </div>
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Step 2: Select Category */}
-              <div className="space-y-2">
-                <Label htmlFor="category">2. Kategorie wählen</Label>
-                  <div className="grid grid-cols-1 gap-2">
-                    {Object.entries(PENALTY_CATEGORIES).map(([key, label]) => (
-                      <Button
-                        key={key}
-                        type="button"
-                        variant={category === key ? "default" : "outline"}
-                        className={`h-12 justify-between transition-all duration-200 ${
-                          category === key 
-                            ? "bg-primary text-primary-foreground shadow-md scale-105" 
-                            : "hover:bg-primary/10 hover:scale-102"
-                        }`}
-                        onClick={() => handleCategoryChange(key as PenaltyCategory)}
-                      >
-                        <span>{label}</span>
-                        <span className="font-mono">{PENALTY_AMOUNTS[key as PenaltyCategory]}€</span>
-                        {category === key && <Check className="w-4 h-4" />}
-                      </Button>
-                    ))}
+        <div className="max-w-6xl mx-auto">
+          <div className="mb-6">
+            <h2 className="text-2xl font-bold">Neue Strafe</h2>
+          </div>
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Step 1: Select Member */}
+            <div className="space-y-4">
+              <Label className="text-lg font-semibold">1. Schütze auswählen</Label>
+              {loading ? (
+                <div className="h-32 flex items-center justify-center border rounded-lg">
+                  <span className="text-muted-foreground text-lg">Lade Schützen...</span>
                 </div>
+              ) : members.length === 0 ? (
+                <div className="h-32 flex items-center justify-center border rounded-lg">
+                  <span className="text-muted-foreground text-lg">Keine aktiven Mitglieder</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 min-h-[50vh] auto-rows-min">
+                  {members.map((member) => (
+                    <Button
+                      key={member.id}
+                      type="button"
+                      variant={memberId === member.id ? "default" : "outline"}
+                      className={`h-20 p-3 text-left justify-start transition-all duration-300 ${
+                        memberId === member.id 
+                          ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
+                          : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
+                      }`}
+                      onClick={() => setMemberId(member.id)}
+                    >
+                      <div className="flex flex-col w-full">
+                        <span className="font-semibold text-sm leading-tight">
+                          {member.first_name}
+                        </span>
+                        <span className="font-semibold text-sm leading-tight">
+                          {member.last_name}
+                        </span>
+                        {member.nickname && (
+                          <span className="text-xs opacity-70 leading-tight mt-1">
+                            "{member.nickname}"
+                          </span>
+                        )}
+                      </div>
+                      {memberId === member.id && (
+                        <Check className="w-4 h-4 absolute top-2 right-2" />
+                      )}
+                    </Button>
+                  ))}
+                </div>
+              )}
               </div>
 
-              {/* Step 3: Adjust Amount */}
-              <div className="space-y-2">
-                <Label htmlFor="amount">3. Betrag (€)</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  value={amount}
-                  onChange={(e) => setAmount(Number(e.target.value))}
-                  placeholder="0"
-                  className="h-12 text-lg font-mono text-center"
-                  min="0"
-                  step="0.5"
-                />
+            {/* Step 2: Select Category */}
+            <div className="space-y-4">
+              <Label className="text-lg font-semibold">2. Kategorie wählen</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
+                {Object.entries(PENALTY_CATEGORIES).map(([key, label]) => (
+                  <Button
+                    key={key}
+                    type="button"
+                    variant={category === key ? "default" : "outline"}
+                    className={`h-16 justify-between transition-all duration-300 ${
+                      category === key 
+                        ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
+                        : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
+                    }`}
+                    onClick={() => handleCategoryChange(key as PenaltyCategory)}
+                  >
+                    <span className="font-medium">{label}</span>
+                    <span className="font-mono font-bold">{PENALTY_AMOUNTS[key as PenaltyCategory]}€</span>
+                    {category === key && <Check className="w-5 h-5" />}
+                  </Button>
+                ))}
               </div>
+            </div>
 
-              {/* Optional Notes */}
-              <div className="space-y-2">
-                <Label htmlFor="notes">Bemerkung (optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Zusätzliche Notizen..."
-                  className="resize-none"
-                  rows={3}
-                />
-              </div>
+            {/* Step 3: Adjust Amount */}
+            <div className="space-y-4 max-w-md">
+              <Label htmlFor="amount" className="text-lg font-semibold">3. Betrag (€)</Label>
+              <Input
+                id="amount"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(Number(e.target.value))}
+                placeholder="0"
+                className="h-16 text-xl font-mono text-center"
+                min="0"
+                step="0.5"
+              />
+            </div>
 
-              <Button
-                type="submit"
-                className="w-full h-14 text-lg bg-gradient-to-r from-primary to-primary-glow"
-                disabled={!memberId || !category}
-              >
-                <Check className="w-5 h-5 mr-2" />
-                Strafe hinzufügen
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+            {/* Optional Notes */}
+            <div className="space-y-4 max-w-md">
+              <Label htmlFor="notes" className="text-lg font-semibold">Bemerkung (optional)</Label>
+              <Textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Zusätzliche Notizen..."
+                className="resize-none"
+                rows={3}
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full max-w-md h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
+              disabled={!memberId || !category}
+            >
+              <Check className="w-5 h-5 mr-2" />
+              Strafe hinzufügen
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );
