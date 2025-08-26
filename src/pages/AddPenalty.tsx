@@ -206,7 +206,7 @@ const AddPenalty = () => {
     const currentStepIndex = progressSteps.indexOf(currentStep);
 
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col" style={{ height: 'calc(100vh - env(safe-area-inset-top))' }}>
+      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - env(safe-area-inset-top))' }}>
         {/* Header with progress and navigation */}
         <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground flex-shrink-0">
           <div className="px-4 py-2">
@@ -249,10 +249,10 @@ const AddPenalty = () => {
         </div>
 
         {/* Step content */}
-        <div className="flex-1 p-4 flex flex-col overflow-hidden">
+        <div className="flex-1 min-h-0 p-4 flex flex-col">
           {/* Member Selection */}
           {currentStep === 'member' && (
-            <div className="grid gap-3 grid-cols-3 flex-1 overflow-y-auto">
+            <div className="grid gap-3 grid-cols-3 flex-1 min-h-0 overflow-y-auto">
               {members.map((member, index) => (
                 <Button
                   key={member.id}
