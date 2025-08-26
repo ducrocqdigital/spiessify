@@ -67,10 +67,9 @@ const AdminDashboard = () => {
               <p className="text-primary-foreground/80">Strafen verwalten</p>
             </div>
             <Button
-              variant="outline"
+              variant="outline-inverse"
               size="sm"
               onClick={handleLogout}
-              className="text-primary-foreground border-primary-foreground/20 hover:bg-primary-foreground/10"
             >
               <LogOut className="w-4 h-4 mr-2" />
               Abmelden
