@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { toast } from '@/hooks/use-toast';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { PenaltyCatalog, PENALTY_CATALOG_CATEGORIES, PenaltyCatalogCategory } from '@/types';
-import { Plus, Edit2, ArrowLeft, Trash2, Euro, ToggleLeft, ToggleRight } from 'lucide-react';
+import { Plus, Edit2, ArrowLeft, Trash2, Euro } from 'lucide-react';
 
 const PenaltyCatalogManagement = () => {
   const navigate = useNavigate();
@@ -104,31 +104,15 @@ const PenaltyCatalogManagement = () => {
     }
   };
 
-  const handleToggleActive = async (penaltyType: PenaltyCatalog) => {
-    try {
-      await penaltyCatalogService.toggleActive(penaltyType.id);
-      toast({
-        title: "Erfolg",
-        description: `${penaltyType.name} wurde ${penaltyType.is_active ? 'deaktiviert' : 'aktiviert'}.`,
-      });
-      loadPenaltyTypes();
-    } catch (error) {
-      toast({
-        title: "Fehler",
-        description: "Status konnte nicht geändert werden.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const handleDeletePenaltyType = async () => {
     if (!deletingPenaltyType) return;
     
     try {
-      await penaltyCatalogService.delete(deletingPenaltyType.id);
+      await penaltyCatalogService.hardDelete(deletingPenaltyType.id);
       toast({
         title: "Erfolg",
-        description: `${deletingPenaltyType.name} wurde deaktiviert.`,
+        description: `${deletingPenaltyType.name} wurde gelöscht.`,
       });
       setIsDeleteDialogOpen(false);
       setDeletingPenaltyType(null);
@@ -136,7 +120,7 @@ const PenaltyCatalogManagement = () => {
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Strafart konnte nicht deaktiviert werden.",
+        description: "Strafart konnte nicht gelöscht werden.",
         variant: "destructive",
       });
     }
@@ -269,13 +253,12 @@ const PenaltyCatalogManagement = () => {
                 <TableHead>Kategorie</TableHead>
                 <TableHead>Betrag</TableHead>
                 <TableHead>Beschreibung</TableHead>
-                <TableHead>Status</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {penaltyTypes.map((penaltyType) => (
-                <TableRow key={penaltyType.id} className={!penaltyType.is_active ? "opacity-50" : ""}>
+                <TableRow key={penaltyType.id}>
                   <TableCell>
                     <div className="font-medium">{penaltyType.name}</div>
                   </TableCell>
@@ -295,11 +278,6 @@ const PenaltyCatalogManagement = () => {
                       {penaltyType.description || '-'}
                     </div>
                   </TableCell>
-                  <TableCell>
-                    <Badge variant={penaltyType.is_active ? "default" : "secondary"}>
-                      {penaltyType.is_active ? "Aktiv" : "Inaktiv"}
-                    </Badge>
-                  </TableCell>
                   <TableCell className="text-right">
                     <div className="flex gap-2 justify-end">
                       <Button
@@ -309,18 +287,6 @@ const PenaltyCatalogManagement = () => {
                         className="hover:bg-primary/10"
                       >
                         <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleActive(penaltyType)}
-                        className={penaltyType.is_active ? "hover:bg-warning/10" : "hover:bg-success/10"}
-                      >
-                        {penaltyType.is_active ? (
-                          <ToggleRight className="h-4 w-4 text-warning" />
-                        ) : (
-                          <ToggleLeft className="h-4 w-4 text-muted-foreground" />
-                        )}
                       </Button>
                       <Button
                         variant="outline"
@@ -407,9 +373,9 @@ const PenaltyCatalogManagement = () => {
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Strafart deaktivieren</DialogTitle>
+            <DialogTitle>Strafart löschen</DialogTitle>
             <DialogDescription>
-              Sind Sie sicher, dass Sie diese Strafart deaktivieren möchten? Sie wird nicht gelöscht, aber steht nicht mehr zur Verfügung.
+              Sind Sie sicher, dass Sie diese Strafart endgültig löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.
             </DialogDescription>
           </DialogHeader>
           {deletingPenaltyType && (
@@ -427,7 +393,7 @@ const PenaltyCatalogManagement = () => {
               Abbrechen
             </Button>
             <Button variant="destructive" onClick={handleDeletePenaltyType}>
-              Deaktivieren
+              Löschen
             </Button>
           </DialogFooter>
         </DialogContent>
