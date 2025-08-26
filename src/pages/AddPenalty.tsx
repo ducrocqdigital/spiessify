@@ -124,17 +124,14 @@ const AddPenalty = () => {
                 className="h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden"
                 onClick={() => handleMemberSelect(member.id)}
               >
-                <div className="flex flex-col w-full h-full justify-center items-center min-h-0 overflow-hidden px-1">
-                  <div className="text-center leading-tight break-words hyphens-auto w-full font-bold text-sm" 
-                       style={{ 
-                         display: '-webkit-box',
-                         WebkitLineClamp: 3,
-                         WebkitBoxOrient: 'vertical',
-                         overflow: 'hidden',
-                         wordBreak: 'break-word'
-                       }}>
+                <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-1">
+                  <div className="text-center font-bold text-sm leading-tight break-words w-full">
                     {member.first_name} {member.last_name}
-                    {member.nickname && ` "${member.nickname}"`}
+                    {member.nickname && (
+                      <div className="text-xs opacity-70 mt-0.5">
+                        "{member.nickname}"
+                      </div>
+                    )}
                   </div>
                 </div>
               </Button>
