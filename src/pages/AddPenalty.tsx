@@ -206,7 +206,7 @@ const AddPenalty = () => {
     const currentStepIndex = progressSteps.indexOf(currentStep);
 
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col h-screen">
+      <div className="fixed inset-0 bg-background z-50 flex flex-col" style={{ height: 'calc(100vh - env(safe-area-inset-top))' }}>
         {/* Header with progress and navigation */}
         <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground flex-shrink-0">
           <div className="px-4 py-2">
@@ -228,9 +228,9 @@ const AddPenalty = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => navigate('/admin')}
-                className="text-primary-foreground hover:bg-primary-foreground/10 p-2"
+                className="text-primary-foreground hover:bg-primary-foreground/10 p-3"
               >
-                <X className="w-4 h-4" />
+                <X className="w-6 h-6" />
               </Button>
             </div>
             
