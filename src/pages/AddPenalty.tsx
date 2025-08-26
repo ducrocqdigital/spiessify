@@ -173,6 +173,13 @@ const AddPenalty = () => {
                 key={member.id}
                 type="button"
                 variant="outline"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isSelectionDisabled) {
+                    handleMemberSelect(member.id, e);
+                  }
+                }}
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
