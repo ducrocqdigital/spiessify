@@ -18,12 +18,14 @@ export type Database = {
         Row: {
           birth_date: string | null
           created_at: string
+          email: string | null
           first_name: string
           id: string
           is_active: boolean
           join_year: number | null
           last_name: string
           nickname: string | null
+          phone: string | null
           profile_photo: string | null
           rank: Database["public"]["Enums"]["member_rank"] | null
           updated_at: string
@@ -31,12 +33,14 @@ export type Database = {
         Insert: {
           birth_date?: string | null
           created_at?: string
+          email?: string | null
           first_name: string
           id?: string
           is_active?: boolean
           join_year?: number | null
           last_name: string
           nickname?: string | null
+          phone?: string | null
           profile_photo?: string | null
           rank?: Database["public"]["Enums"]["member_rank"] | null
           updated_at?: string
@@ -44,12 +48,14 @@ export type Database = {
         Update: {
           birth_date?: string | null
           created_at?: string
+          email?: string | null
           first_name?: string
           id?: string
           is_active?: boolean
           join_year?: number | null
           last_name?: string
           nickname?: string | null
+          phone?: string | null
           profile_photo?: string | null
           rank?: Database["public"]["Enums"]["member_rank"] | null
           updated_at?: string
