@@ -91,14 +91,14 @@ const AdminDashboard = () => {
                 </>
               ) : zugsau ? (
                 <>
-                  <div className="text-2xl font-bold text-warning">{zugsau.totalAmount}€</div>
-                  <div className="text-sm text-muted-foreground">
+                  <div className="text-2xl font-bold text-warning">
                     {memberService.getDisplayName(zugsau.member)}
                   </div>
+                  <div className="text-sm text-muted-foreground">Zugsau ({zugsau.totalAmount}€)</div>
                 </>
               ) : (
                 <>
-                  <div className="text-2xl font-bold">0€</div>
+                  <div className="text-2xl font-bold">-</div>
                   <div className="text-sm text-muted-foreground">Zugsau</div>
                 </>
               )}
