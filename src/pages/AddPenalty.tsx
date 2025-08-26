@@ -91,9 +91,9 @@ const AddPenalty = () => {
   // Full-screen member selection overlay
   if (showMemberSelection && !loading && members.length > 0) {
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
+      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden h-screen">
         {/* Cancel button */}
-        <div className="absolute top-2 right-2 z-10">
+        <div className="absolute top-1 right-1 z-10">
           <Button
             variant="outline"
             size="sm"
@@ -105,12 +105,12 @@ const AddPenalty = () => {
         </div>
         
         {/* Compact title */}
-        <div className="p-2 text-center flex-shrink-0">
-          <h1 className="text-xl font-bold">Schütze auswählen</h1>
+        <div className="py-1 text-center flex-shrink-0">
+          <h1 className="text-lg font-bold">Schütze auswählen</h1>
         </div>
         
         {/* Member grid - uses nearly full viewport */}
-        <div className="flex-1 px-2 pb-2 min-h-0">
+        <div className="flex-1 px-1 pb-1 min-h-0 overflow-hidden">
           <div className="h-full w-full grid gap-1" 
                style={{
                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -121,21 +121,23 @@ const AddPenalty = () => {
                 key={member.id}
                 type="button"
                 variant="outline"
-                className="h-full p-2 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col"
+                className="h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden"
                 onClick={() => handleMemberSelect(member.id)}
               >
-                <div className="flex flex-col w-full h-full justify-center items-center">
-                  <span className="font-bold text-base leading-tight">
-                    {member.first_name}
-                  </span>
-                  <span className="font-bold text-base leading-tight">
-                    {member.last_name}
-                  </span>
-                  {member.nickname && (
-                    <span className="text-sm opacity-70 leading-tight mt-1">
-                      "{member.nickname}"
-                    </span>
-                  )}
+                <div className="flex flex-col w-full h-full justify-center items-center min-h-0 overflow-hidden">
+                  <div className="text-center leading-tight break-words hyphens-auto w-full">
+                    <div className="font-bold text-sm leading-tight">
+                      {member.first_name}
+                    </div>
+                    <div className="font-bold text-sm leading-tight">
+                      {member.last_name}
+                    </div>
+                    {member.nickname && (
+                      <div className="text-xs opacity-70 leading-tight mt-0.5">
+                        "{member.nickname}"
+                      </div>
+                    )}
+                  </div>
                 </div>
               </Button>
             ))}
