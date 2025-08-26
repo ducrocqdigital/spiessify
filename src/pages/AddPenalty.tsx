@@ -260,17 +260,17 @@ const AddPenalty = () => {
                   variant="outline"
                   onClick={(e) => handleMemberSelect(member.id, e)}
                   disabled={isSelectionDisabled}
-                  className="h-20 p-2 flex flex-col justify-center text-center animate-fade-in"
+                  className="h-20 p-2 flex flex-col justify-center text-center animate-fade-in overflow-hidden"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="text-sm font-semibold leading-tight">
+                  <div className="text-xs font-semibold leading-tight line-clamp-2 break-words">
                     {member.first_name}
                   </div>
-                  <div className="text-sm font-semibold leading-tight">
+                  <div className="text-xs font-semibold leading-tight line-clamp-2 break-words">
                     {member.last_name}
                   </div>
                   {member.nickname && (
-                    <div className="text-xs opacity-70 mt-1">
+                    <div className="text-xs opacity-70 mt-0.5 line-clamp-1 break-words">
                       "{member.nickname}"
                     </div>
                   )}
