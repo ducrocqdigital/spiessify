@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Check } from 'lucide-react';
+import { ArrowLeft, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
@@ -22,6 +22,7 @@ const AddPenalty = () => {
   const [category, setCategory] = useState<PenaltyCategory>('uniform');
   const [amount, setAmount] = useState<number>(PENALTY_AMOUNTS.uniform);
   const [notes, setNotes] = useState('');
+  const [showMemberSelection, setShowMemberSelection] = useState(true);
 
   useEffect(() => {
     loadMembers();
@@ -45,6 +46,11 @@ const AddPenalty = () => {
   const handleCategoryChange = (value: PenaltyCategory) => {
     setCategory(value);
     setAmount(PENALTY_AMOUNTS[value]);
+  };
+
+  const handleMemberSelect = (id: string) => {
+    setMemberId(id);
+    setShowMemberSelection(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,6 +88,63 @@ const AddPenalty = () => {
     }
   };
 
+  // Full-screen member selection overlay
+  if (showMemberSelection && !loading && members.length > 0) {
+    return (
+      <div className="fixed inset-0 bg-background z-50 flex flex-col">
+        {/* Cancel button */}
+        <div className="absolute top-4 right-4 z-10">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate('/admin')}
+            className="bg-background/80 backdrop-blur-sm"
+          >
+            <X className="w-4 h-4" />
+          </Button>
+        </div>
+        
+        {/* Title */}
+        <div className="p-6 text-center">
+          <h1 className="text-2xl font-bold">Schütze auswählen</h1>
+          <p className="text-muted-foreground">Tippe auf einen Namen</p>
+        </div>
+        
+        {/* Member grid - uses full viewport */}
+        <div className="flex-1 p-4 overflow-hidden">
+          <div className="h-full grid gap-3 auto-rows-fr" 
+               style={{
+                 gridTemplateColumns: `repeat(auto-fit, minmax(140px, 1fr))`,
+               }}>
+            {members.map((member) => (
+              <Button
+                key={member.id}
+                type="button"
+                variant="outline"
+                className="h-full p-3 text-left justify-start transition-all duration-200 hover:bg-primary/5 hover:scale-[1.02] hover:shadow-md flex flex-col"
+                onClick={() => handleMemberSelect(member.id)}
+              >
+                <div className="flex flex-col w-full h-full justify-center">
+                  <span className="font-semibold text-sm leading-tight">
+                    {member.first_name}
+                  </span>
+                  <span className="font-semibold text-sm leading-tight">
+                    {member.last_name}
+                  </span>
+                  {member.nickname && (
+                    <span className="text-xs opacity-70 leading-tight mt-1">
+                      "{member.nickname}"
+                    </span>
+                  )}
+                </div>
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -110,52 +173,41 @@ const AddPenalty = () => {
             <h2 className="text-2xl font-bold">Neue Strafe</h2>
           </div>
           <form onSubmit={handleSubmit} className="space-y-8">
-            {/* Step 1: Select Member */}
+            {/* Step 1: Selected Member */}
             <div className="space-y-4">
               <Label className="text-lg font-semibold">1. Schütze auswählen</Label>
-              {loading ? (
-                <div className="h-32 flex items-center justify-center border rounded-lg">
-                  <span className="text-muted-foreground text-lg">Lade Schützen...</span>
-                </div>
-              ) : members.length === 0 ? (
-                <div className="h-32 flex items-center justify-center border rounded-lg">
-                  <span className="text-muted-foreground text-lg">Keine aktiven Mitglieder</span>
+              {memberId ? (
+                <div className="flex items-center justify-between p-4 border rounded-lg bg-primary/5">
+                  <div>
+                    <span className="font-semibold">
+                      {members.find(m => m.id === memberId)?.first_name} {members.find(m => m.id === memberId)?.last_name}
+                    </span>
+                    {members.find(m => m.id === memberId)?.nickname && (
+                      <span className="text-muted-foreground ml-2">
+                        "{members.find(m => m.id === memberId)?.nickname}"
+                      </span>
+                    )}
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowMemberSelection(true)}
+                  >
+                    Ändern
+                  </Button>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 min-h-[50vh] auto-rows-min">
-                  {members.map((member) => (
-                    <Button
-                      key={member.id}
-                      type="button"
-                      variant={memberId === member.id ? "default" : "outline"}
-                      className={`h-20 p-3 text-left justify-start transition-all duration-300 ${
-                        memberId === member.id 
-                          ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
-                          : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
-                      }`}
-                      onClick={() => setMemberId(member.id)}
-                    >
-                      <div className="flex flex-col w-full">
-                        <span className="font-semibold text-sm leading-tight">
-                          {member.first_name}
-                        </span>
-                        <span className="font-semibold text-sm leading-tight">
-                          {member.last_name}
-                        </span>
-                        {member.nickname && (
-                          <span className="text-xs opacity-70 leading-tight mt-1">
-                            "{member.nickname}"
-                          </span>
-                        )}
-                      </div>
-                      {memberId === member.id && (
-                        <Check className="w-4 h-4 absolute top-2 right-2" />
-                      )}
-                    </Button>
-                  ))}
-                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-16 w-full text-left justify-center"
+                  onClick={() => setShowMemberSelection(true)}
+                >
+                  Schütze auswählen
+                </Button>
               )}
-              </div>
+            </div>
 
             {/* Step 2: Select Category */}
             <div className="space-y-4">
