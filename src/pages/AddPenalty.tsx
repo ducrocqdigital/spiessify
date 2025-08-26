@@ -129,12 +129,12 @@ const AddPenalty = () => {
         
         {/* Member grid - uses nearly full viewport */}
         <div className="flex-1 px-1 pb-1 min-h-0 overflow-hidden">
-          <div className="h-full w-full grid gap-1" 
+          <div className="h-full w-full grid gap-1 member-grid-enter" 
                style={{
                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
                  gridTemplateRows: `repeat(${Math.ceil(members.length / 3)}, minmax(0, 1fr))`
                }}>
-            {members.map((member) => (
+            {members.map((member, index) => (
               <Button
                 key={member.id}
                 type="button"
@@ -147,16 +147,19 @@ const AddPenalty = () => {
                   }
                 }}
                 disabled={isSelectionDisabled}
-                className={`member-selection-button h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden ${
+                className={`member-selection-button member-button-enter smooth-hover tap-animation h-full p-1 text-center transition-all duration-300 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden hover:shadow-lg hover:scale-105 ${
                   isSelectionDisabled ? 'pointer-events-none opacity-50' : ''
                 }`}
+                style={{ 
+                  animationDelay: `${index * 50}ms` // Staggered animation
+                }}
               >
                 <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-2">
                   <div className="text-center font-bold text-sm leading-tight w-full whitespace-normal break-words hyphens-auto">
-                    <div>{member.first_name}</div>
-                    <div>{member.last_name}</div>
+                    <div className="transition-transform duration-200">{member.first_name}</div>
+                    <div className="transition-transform duration-200">{member.last_name}</div>
                     {member.nickname && (
-                      <div className="text-xs opacity-70 mt-1">
+                      <div className="text-xs opacity-70 mt-1 transition-opacity duration-200">
                         "{member.nickname}"
                       </div>
                     )}
@@ -194,10 +197,11 @@ const AddPenalty = () => {
 
       <div className="container mx-auto px-4 py-6">
         <div className="max-w-6xl mx-auto">
-          <div className="mb-6">
+          <div className="mb-6 penalty-form-enter">
             <h2 className="text-2xl font-bold">Neue Strafe</h2>
           </div>
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-8 penalty-form-enter"
+                style={{ animationDelay: '0.2s' }}>
             {/* Step 1: Selected Member */}
             <div className="space-y-4">
               <Label className="text-lg font-semibold">1. Schütze auswählen</Label>
@@ -243,7 +247,7 @@ const AddPenalty = () => {
                     key={key}
                     type="button"
                     variant={category === key ? "default" : "outline"}
-                    className={`h-16 justify-between transition-all duration-300 ${
+                    className={`h-16 justify-between transition-all duration-300 smooth-hover tap-animation ${
                       category === key 
                         ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
                         : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
