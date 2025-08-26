@@ -260,17 +260,17 @@ const AddPenalty = () => {
                   variant="outline"
                   onClick={(e) => handleMemberSelect(member.id, e)}
                   disabled={isSelectionDisabled}
-                  className="min-h-24 p-2 flex flex-col justify-center text-center animate-fade-in"
+                  className="h-auto min-h-20 py-2 px-2 flex flex-col justify-center text-center animate-fade-in"
                   style={{ animationDelay: `${index * 50}ms`, lineHeight: '1' }}
                 >
-                  <div className="text-sm font-semibold" style={{ lineHeight: '1' }}>
+                  <div className="text-sm font-semibold" style={{ lineHeight: '1.1' }}>
                     {member.first_name}
                   </div>
-                  <div className="text-sm font-semibold" style={{ lineHeight: '1' }}>
+                  <div className="text-sm font-semibold" style={{ lineHeight: '1.1' }}>
                     {member.last_name}
                   </div>
                   {member.nickname && (
-                    <div className="text-xs opacity-70" style={{ lineHeight: '1' }}>
+                    <div className="text-xs opacity-70" style={{ lineHeight: '1.1' }}>
                       "{member.nickname}"
                     </div>
                   )}
