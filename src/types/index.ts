@@ -65,6 +65,9 @@ export const PENALTY_CATALOG_CATEGORIES = {
   sonstiges: 'Sonstiges'
 } as const;
 
+// Legacy export for backward compatibility
+export const PENALTY_CATEGORIES = PENALTY_CATALOG_CATEGORIES;
+
 export const MEMBER_RANKS = {
   rekrut: 'Rekrut',
   schuetze: 'Schütze',
