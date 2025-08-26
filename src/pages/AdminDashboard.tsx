@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Users, Euro, BarChart3, LogOut } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, Crown } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { Penalty, PENALTY_CATEGORIES } from '@/types';
@@ -16,6 +16,7 @@ const AdminDashboard = () => {
     todayCount: 0,
     activeMembers: 0
   });
+  const [zugsau, setZugsau] = useState<{ member: any; totalAmount: number; penaltyCount: number } | null>(null);
   const [recentPenalties, setRecentPenalties] = useState<Penalty[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -31,9 +32,10 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [penaltyStats, recent] = await Promise.all([
+      const [penaltyStats, recent, zugsauData] = await Promise.all([
         penaltyService.getStats(),
-        penaltyService.getRecent(5)
+        penaltyService.getRecent(5),
+        penaltyService.getZugsau()
       ]);
       
       setStats({
@@ -41,6 +43,7 @@ const AdminDashboard = () => {
         totalMembers: penaltyStats.activeMembers
       });
       setRecentPenalties(recent);
+      setZugsau(zugsauData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -81,9 +84,20 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <Users className="w-8 h-8 mx-auto text-primary mb-2" />
-              <div className="text-2xl font-bold">{loading ? '...' : stats.activeMembers}</div>
-              <div className="text-sm text-muted-foreground">Schützen</div>
+              <Crown className="w-8 h-8 mx-auto text-warning mb-2" />
+              {loading ? (
+                <div className="text-sm text-muted-foreground">Laden...</div>
+              ) : zugsau ? (
+                <>
+                  <div className="text-lg font-bold text-warning">{zugsau.totalAmount}€</div>
+                  <div className="text-sm text-muted-foreground font-medium">
+                    {memberService.getDisplayName(zugsau.member)}
+                  </div>
+                  <div className="text-xs text-muted-foreground">Zugsau</div>
+                </>
+              ) : (
+                <div className="text-sm text-muted-foreground">Keine Strafen</div>
+              )}
             </CardContent>
           </Card>
           <Card>

@@ -132,5 +132,44 @@ export const penaltyService = {
       todayCount: todayPenalties.length,
       activeMembers: activeMembers.data?.length || 0
     };
+  },
+
+  // Get the member with the most penalties (Zugsau)
+  async getZugsau(): Promise<{ member: any; totalAmount: number; penaltyCount: number } | null> {
+    const { data, error } = await supabase
+      .from('members')
+      .select(`
+        *,
+        penalties!inner(amount)
+      `)
+      .eq('is_active', true);
+
+    if (error) throw error;
+    
+    if (!data || data.length === 0) return null;
+
+    // Calculate totals for each member
+    const memberStats = data.map(member => {
+      const totalAmount = member.penalties.reduce((sum: number, penalty: any) => sum + Number(penalty.amount), 0);
+      const penaltyCount = member.penalties.length;
+      
+      return {
+        member: {
+          id: member.id,
+          first_name: member.first_name,
+          last_name: member.last_name,
+          nickname: member.nickname
+        },
+        totalAmount,
+        penaltyCount
+      };
+    });
+
+    // Find the member with the highest total amount
+    const zugsau = memberStats.reduce((max, current) => 
+      current.totalAmount > max.totalAmount ? current : max
+    );
+
+    return zugsau.totalAmount > 0 ? zugsau : null;
   }
 };
