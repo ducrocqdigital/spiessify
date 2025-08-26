@@ -114,43 +114,68 @@ const AddPenalty = () => {
               {/* Step 1: Select Member */}
               <div className="space-y-2">
                 <Label htmlFor="member">1. Schütze auswählen</Label>
-                <Select value={memberId} onValueChange={setMemberId}>
-                  <SelectTrigger className="h-12">
-                    <SelectValue placeholder="Schütze wählen..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {loading ? (
-                      <SelectItem value="loading" disabled>Laden...</SelectItem>
-                    ) : members.length === 0 ? (
-                      <SelectItem value="empty" disabled>Keine aktiven Mitglieder</SelectItem>
-                    ) : (
-                      members.map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {memberService.getDisplayName(member)}
-                        </SelectItem>
-                      ))
-                    )}
-                  </SelectContent>
-                </Select>
+                {loading ? (
+                  <div className="h-12 flex items-center justify-center border rounded-md">
+                    <span className="text-muted-foreground">Lade Schützen...</span>
+                  </div>
+                ) : members.length === 0 ? (
+                  <div className="h-12 flex items-center justify-center border rounded-md">
+                    <span className="text-muted-foreground">Keine aktiven Mitglieder</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto border rounded-md p-2">
+                    {members.map((member) => (
+                      <Button
+                        key={member.id}
+                        type="button"
+                        variant={memberId === member.id ? "default" : "outline"}
+                        className={`h-16 p-2 text-left justify-start transition-all duration-200 ${
+                          memberId === member.id 
+                            ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                            : "hover:bg-primary/10 hover:scale-102"
+                        }`}
+                        onClick={() => setMemberId(member.id)}
+                      >
+                        <div className="flex flex-col w-full">
+                          <span className="font-medium text-sm leading-tight">
+                            {member.first_name}
+                          </span>
+                          <span className="font-medium text-sm leading-tight">
+                            {member.last_name}
+                          </span>
+                          {member.nickname && (
+                            <span className="text-xs opacity-70 leading-tight">
+                              "{member.nickname}"
+                            </span>
+                          )}
+                        </div>
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </div>
 
               {/* Step 2: Select Category */}
               <div className="space-y-2">
                 <Label htmlFor="category">2. Kategorie wählen</Label>
-                <div className="grid grid-cols-1 gap-2">
-                  {Object.entries(PENALTY_CATEGORIES).map(([key, label]) => (
-                    <Button
-                      key={key}
-                      type="button"
-                      variant={category === key ? "default" : "outline"}
-                      className="h-12 justify-between"
-                      onClick={() => handleCategoryChange(key as PenaltyCategory)}
-                    >
-                      <span>{label}</span>
-                      <span className="font-mono">{PENALTY_AMOUNTS[key as PenaltyCategory]}€</span>
-                      {category === key && <Check className="w-4 h-4" />}
-                    </Button>
-                  ))}
+                  <div className="grid grid-cols-1 gap-2">
+                    {Object.entries(PENALTY_CATEGORIES).map(([key, label]) => (
+                      <Button
+                        key={key}
+                        type="button"
+                        variant={category === key ? "default" : "outline"}
+                        className={`h-12 justify-between transition-all duration-200 ${
+                          category === key 
+                            ? "bg-primary text-primary-foreground shadow-md scale-105" 
+                            : "hover:bg-primary/10 hover:scale-102"
+                        }`}
+                        onClick={() => handleCategoryChange(key as PenaltyCategory)}
+                      >
+                        <span>{label}</span>
+                        <span className="font-mono">{PENALTY_AMOUNTS[key as PenaltyCategory]}€</span>
+                        {category === key && <Check className="w-4 h-4" />}
+                      </Button>
+                    ))}
                 </div>
               </div>
 

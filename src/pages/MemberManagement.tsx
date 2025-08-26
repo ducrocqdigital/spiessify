@@ -349,10 +349,13 @@ const MemberManagement = () => {
             </TableHeader>
             <TableBody>
               {members.map((member) => (
-                <TableRow key={member.id}>
+                <TableRow key={member.id} className={!member.is_active ? "opacity-50" : ""}>
                   <TableCell>
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={member.profile_photo} alt={`${member.first_name} ${member.last_name}`} />
+                      <AvatarImage 
+                        src={member.profile_photo || undefined} 
+                        alt={`${member.first_name} ${member.last_name}`} 
+                      />
                       <AvatarFallback className="bg-primary/10 text-primary">
                         <User className="h-5 w-5" />
                       </AvatarFallback>
