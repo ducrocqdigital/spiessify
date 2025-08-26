@@ -23,6 +23,7 @@ const AddPenalty = () => {
   const [amount, setAmount] = useState<number>(PENALTY_AMOUNTS.uniform);
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
+  const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
 
   useEffect(() => {
     loadMembers();
@@ -48,9 +49,26 @@ const AddPenalty = () => {
     setAmount(PENALTY_AMOUNTS[value]);
   };
 
-  const handleMemberSelect = (id: string) => {
+  const handleMemberSelect = (id: string, event?: React.MouseEvent | React.TouchEvent) => {
+    // Prevent unwanted selection if already in progress
+    if (isSelectionDisabled) return;
+    
+    // Prevent default behavior and stop propagation for touch events
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    
+    // Temporarily disable further selections
+    setIsSelectionDisabled(true);
+    
     setMemberId(id);
     setShowMemberSelection(false);
+    
+    // Re-enable selection after a short delay
+    setTimeout(() => {
+      setIsSelectionDisabled(false);
+    }, 500);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -122,7 +140,10 @@ const AddPenalty = () => {
                 type="button"
                 variant="outline"
                 className="h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden"
-                onClick={() => handleMemberSelect(member.id)}
+                onClick={(e) => handleMemberSelect(member.id, e)}
+                onTouchStart={(e) => e.preventDefault()}
+                disabled={isSelectionDisabled}
+                style={{ pointerEvents: isSelectionDisabled ? 'none' : 'auto' }}
               >
                 <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-2">
                   <div className="text-center font-bold text-sm leading-tight w-full whitespace-normal break-words hyphens-auto">
