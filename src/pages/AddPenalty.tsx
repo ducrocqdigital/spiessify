@@ -266,11 +266,11 @@ const AddPenalty = () => {
                   <div className="text-xs font-semibold leading-none truncate w-full">
                     {member.first_name}
                   </div>
-                  <div className="text-xs font-semibold leading-none truncate w-full mt-0.5">
+                  <div className="text-xs font-semibold leading-none truncate w-full">
                     {member.last_name}
                   </div>
                   {member.nickname && (
-                    <div className="text-xs opacity-70 leading-none truncate w-full mt-0.5">
+                    <div className="text-xs opacity-70 leading-none truncate w-full">
                       "{member.nickname}"
                     </div>
                   )}
