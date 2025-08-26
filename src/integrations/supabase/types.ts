@@ -14,7 +14,89 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      members: {
+        Row: {
+          birth_date: string | null
+          created_at: string
+          first_name: string
+          id: string
+          is_active: boolean
+          join_year: number | null
+          last_name: string
+          nickname: string | null
+          profile_photo: string | null
+          rank: Database["public"]["Enums"]["member_rank"] | null
+          updated_at: string
+        }
+        Insert: {
+          birth_date?: string | null
+          created_at?: string
+          first_name: string
+          id?: string
+          is_active?: boolean
+          join_year?: number | null
+          last_name: string
+          nickname?: string | null
+          profile_photo?: string | null
+          rank?: Database["public"]["Enums"]["member_rank"] | null
+          updated_at?: string
+        }
+        Update: {
+          birth_date?: string | null
+          created_at?: string
+          first_name?: string
+          id?: string
+          is_active?: boolean
+          join_year?: number | null
+          last_name?: string
+          nickname?: string | null
+          profile_photo?: string | null
+          rank?: Database["public"]["Enums"]["member_rank"] | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      penalties: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          date: string
+          id: string
+          member_id: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          category: string
+          created_at?: string
+          date?: string
+          id?: string
+          member_id: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          date?: string
+          id?: string
+          member_id?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "penalties_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +105,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      member_rank:
+        | "rekrut"
+        | "schuetze"
+        | "gefreiter"
+        | "obergefreiter"
+        | "unteroffizier"
+        | "feldwebel"
+        | "oberfeldwebel"
+        | "leutnant"
+        | "oberleutnant"
+        | "hauptmann"
+        | "major"
+        | "oberst"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +244,21 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      member_rank: [
+        "rekrut",
+        "schuetze",
+        "gefreiter",
+        "obergefreiter",
+        "unteroffizier",
+        "feldwebel",
+        "oberfeldwebel",
+        "leutnant",
+        "oberleutnant",
+        "hauptmann",
+        "major",
+        "oberst",
+      ],
+    },
   },
 } as const
