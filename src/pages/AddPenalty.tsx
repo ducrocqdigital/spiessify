@@ -91,7 +91,7 @@ const AddPenalty = () => {
   // Full-screen member selection overlay
   if (showMemberSelection && !loading && members.length > 0) {
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col">
+      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden">
         {/* Cancel button */}
         <div className="absolute top-2 right-2 z-10">
           <Button
@@ -105,16 +105,16 @@ const AddPenalty = () => {
         </div>
         
         {/* Compact title */}
-        <div className="p-3 text-center">
+        <div className="p-2 text-center flex-shrink-0">
           <h1 className="text-xl font-bold">Schütze auswählen</h1>
         </div>
         
         {/* Member grid - uses nearly full viewport */}
-        <div className="flex-1 px-3 pb-3 overflow-hidden">
-          <div className="h-full grid gap-2" 
+        <div className="flex-1 px-2 pb-2 min-h-0">
+          <div className="h-full w-full grid gap-1" 
                style={{
-                 gridTemplateColumns: 'repeat(3, 1fr)',
-                 gridTemplateRows: `repeat(${Math.ceil(members.length / 3)}, 1fr)`
+                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                 gridTemplateRows: `repeat(${Math.ceil(members.length / 3)}, minmax(0, 1fr))`
                }}>
             {members.map((member) => (
               <Button
