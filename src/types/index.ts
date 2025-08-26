@@ -33,6 +33,7 @@ export type PenaltyCategory = 'uniform' | 'marsch' | 'sonstiges';
 export type MemberRank = 
   | 'rekrut'
   | 'schuetze' 
+  | 'gastschuetze'
   | 'gefreiter'
   | 'obergefreiter'
   | 'unteroffizier'
@@ -59,6 +60,7 @@ export const PENALTY_AMOUNTS = {
 export const MEMBER_RANKS = {
   rekrut: 'Rekrut',
   schuetze: 'Schütze',
+  gastschuetze: 'Gastschütze',
   gefreiter: 'Gefreiter',
   obergefreiter: 'Obergefreiter',
   unteroffizier: 'Unteroffizier',
