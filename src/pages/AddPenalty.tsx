@@ -264,10 +264,7 @@ const AddPenalty = () => {
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="text-sm font-semibold leading-tight break-words">
-                    {member.first_name}
-                  </div>
-                  <div className="text-sm font-semibold leading-tight break-words">
-                    {member.last_name}
+                    {member.first_name} {member.last_name}
                   </div>
                   {member.nickname && (
                     <div className="text-xs opacity-70 leading-tight break-words mt-1">
