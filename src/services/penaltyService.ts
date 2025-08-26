@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { Penalty, PenaltyCategory } from '@/types';
+import { Penalty } from '@/types';
 
 export const penaltyService = {
   // Get all penalties with member information
@@ -8,7 +8,8 @@ export const penaltyService = {
       .from('penalties')
       .select(`
         *,
-        member:members(*)
+        member:members(*),
+        penalty_type:penalty_catalog(*)
       `)
       .order('created_at', { ascending: false });
     
@@ -22,7 +23,8 @@ export const penaltyService = {
       .from('penalties')
       .select(`
         *,
-        member:members(*)
+        member:members(*),
+        penalty_type:penalty_catalog(*)
       `)
       .eq('member_id', memberId)
       .order('created_at', { ascending: false });
@@ -37,7 +39,8 @@ export const penaltyService = {
       .from('penalties')
       .select(`
         *,
-        member:members(*)
+        member:members(*),
+        penalty_type:penalty_catalog(*)
       `)
       .order('created_at', { ascending: false })
       .limit(limit);
@@ -54,7 +57,8 @@ export const penaltyService = {
       .from('penalties')
       .select(`
         *,
-        member:members(*)
+        member:members(*),
+        penalty_type:penalty_catalog(*)
       `)
       .eq('date', today)
       .order('created_at', { ascending: false });
@@ -66,7 +70,7 @@ export const penaltyService = {
   // Create new penalty
   async create(penalty: {
     member_id: string;
-    category: PenaltyCategory;
+    penalty_type_id: string;
     amount: number;
     date?: string;
     notes?: string;
@@ -79,7 +83,8 @@ export const penaltyService = {
       }])
       .select(`
         *,
-        member:members(*)
+        member:members(*),
+        penalty_type:penalty_catalog(*)
       `)
       .single();
     
@@ -95,7 +100,8 @@ export const penaltyService = {
       .eq('id', id)
       .select(`
         *,
-        member:members(*)
+        member:members(*),
+        penalty_type:penalty_catalog(*)
       `)
       .single();
     

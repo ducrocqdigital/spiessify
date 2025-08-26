@@ -65,32 +65,32 @@ export type Database = {
       penalties: {
         Row: {
           amount: number
-          category: string
           created_at: string
           date: string
           id: string
           member_id: string
           notes: string | null
+          penalty_type_id: string | null
           updated_at: string
         }
         Insert: {
           amount: number
-          category: string
           created_at?: string
           date?: string
           id?: string
           member_id: string
           notes?: string | null
+          penalty_type_id?: string | null
           updated_at?: string
         }
         Update: {
           amount?: number
-          category?: string
           created_at?: string
           date?: string
           id?: string
           member_id?: string
           notes?: string | null
+          penalty_type_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -101,7 +101,47 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "penalties_penalty_type_id_fkey"
+            columns: ["penalty_type_id"]
+            isOneToOne: false
+            referencedRelation: "penalty_catalog"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      penalty_catalog: {
+        Row: {
+          amount: number
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          amount?: number
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {

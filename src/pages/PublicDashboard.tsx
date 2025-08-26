@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trophy, Medal, Award, Filter, Users, Euro, Calendar } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
-import { PENALTY_CATEGORIES, Member, Penalty } from '@/types';
+import { Member, Penalty } from '@/types';
 
 type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
 
@@ -185,7 +185,7 @@ const PublicDashboard = () => {
                       </div>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Badge variant="outline" className="text-xs">
-                          {PENALTY_CATEGORIES[penalty.category]}
+                          {penalty.penalty_type?.name || 'Unbekannt'}
                         </Badge>
                         <span>{penalty.date}</span>
                       </div>

@@ -11,14 +11,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
 import { penaltyService } from '@/services/penaltyService';
+import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { memberService } from '@/services/memberService';
-import { Penalty, Member, PENALTY_CATEGORIES, PenaltyCategory, PENALTY_AMOUNTS } from '@/types';
-import { Plus, Edit2, ArrowLeft, Trash2, Euro } from 'lucide-react';
+import { Penalty, Member, PenaltyCatalog, PENALTY_CATALOG_CATEGORIES } from '@/types';
+import { Plus, Edit2, ArrowLeft, Trash2, Euro, Settings } from 'lucide-react';
 
 const PenaltyManagement = () => {
   const navigate = useNavigate();
   const [penalties, setPenalties] = useState<Penalty[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [penaltyTypes, setPenaltyTypes] = useState<PenaltyCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
@@ -27,8 +29,8 @@ const PenaltyManagement = () => {
   const [deletingPenalty, setDeletingPenalty] = useState<Penalty | null>(null);
   const [formData, setFormData] = useState({
     member_id: '',
-    category: 'uniform' as PenaltyCategory,
-    amount: PENALTY_AMOUNTS.uniform as number,
+    penalty_type_id: '',
+    amount: 0,
     date: new Date().toISOString().split('T')[0],
     notes: ''
   });
@@ -44,12 +46,14 @@ const PenaltyManagement = () => {
 
   const loadData = async () => {
     try {
-      const [penaltiesData, membersData] = await Promise.all([
+      const [penaltiesData, membersData, penaltyTypesData] = await Promise.all([
         penaltyService.getAll(),
-        memberService.getAll()
+        memberService.getAll(),
+        penaltyCatalogService.getActive()
       ]);
       setPenalties(penaltiesData);
       setMembers(membersData);
+      setPenaltyTypes(penaltyTypesData);
     } catch (error) {
       toast({
         title: "Fehler",
@@ -64,18 +68,19 @@ const PenaltyManagement = () => {
   const resetForm = () => {
     setFormData({
       member_id: '',
-      category: 'uniform',
-      amount: PENALTY_AMOUNTS.uniform as number,
+      penalty_type_id: '',
+      amount: 0,
       date: new Date().toISOString().split('T')[0],
       notes: ''
     });
   };
 
-  const handleCategoryChange = (category: PenaltyCategory) => {
+  const handlePenaltyTypeChange = (penaltyTypeId: string) => {
+    const penaltyType = penaltyTypes.find(pt => pt.id === penaltyTypeId);
     setFormData({
       ...formData,
-      category,
-      amount: PENALTY_AMOUNTS[category] as number
+      penalty_type_id: penaltyTypeId,
+      amount: penaltyType?.amount || 0
     });
   };
 
@@ -150,7 +155,7 @@ const PenaltyManagement = () => {
     setEditingPenalty(penalty);
     setFormData({
       member_id: penalty.member_id,
-      category: penalty.category,
+      penalty_type_id: penalty.penalty_type_id,
       amount: penalty.amount,
       date: penalty.date,
       notes: penalty.notes || ''
@@ -163,8 +168,29 @@ const PenaltyManagement = () => {
     return member ? memberService.getDisplayName(member) : 'Unbekannt';
   };
 
+  const getPenaltyTypeName = (penaltyTypeId: string) => {
+    const penaltyType = penaltyTypes.find(pt => pt.id === penaltyTypeId);
+    return penaltyType?.name || 'Unbekannt';
+  };
+
+  const getPenaltyTypeCategory = (penaltyTypeId: string) => {
+    const penaltyType = penaltyTypes.find(pt => pt.id === penaltyTypeId);
+    return penaltyType?.category || 'sonstiges';
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('de-DE');
+  };
+
+  const getCategoryBadgeVariant = (category: string) => {
+    const variants: Record<string, any> = {
+      timing: 'default',
+      soziales: 'secondary', 
+      abnahme: 'outline',
+      maschieren: 'destructive',
+      sonstiges: 'default'
+    };
+    return variants[category] || 'default';
   };
 
   if (loading) {
@@ -182,90 +208,107 @@ const PenaltyManagement = () => {
           <h1 className="text-3xl font-bold">Strafenverwaltung</h1>
         </div>
         
-        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Neue Strafe
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Neue Strafe hinzufügen</DialogTitle>
-              <DialogDescription>
-                Fügen Sie eine neue Strafe für ein Mitglied hinzu.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div>
-                <Label htmlFor="member_id">Mitglied *</Label>
-                <Select value={formData.member_id} onValueChange={(value) => setFormData({...formData, member_id: value})}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Mitglied auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {members
-                      .filter(member => member.is_active)
-                      .map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {memberService.getDisplayName(member)}
-                        </SelectItem>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigate('/admin/penalty-catalog')}>
+            <Settings className="h-4 w-4 mr-2" />
+            Strafenkatalog verwalten
+          </Button>
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={() => setIsAddDialogOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Neue Strafe
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader>
+                <DialogTitle>Neue Strafe hinzufügen</DialogTitle>
+                <DialogDescription>
+                  Fügen Sie eine neue Strafe für ein Mitglied hinzu.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div>
+                  <Label htmlFor="member_id">Mitglied *</Label>
+                  <Select value={formData.member_id} onValueChange={(value) => setFormData({...formData, member_id: value})}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Mitglied auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {members
+                        .filter(member => member.is_active)
+                        .map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {memberService.getDisplayName(member)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="penalty_type_id">Strafart *</Label>
+                  <Select value={formData.penalty_type_id} onValueChange={handlePenaltyTypeChange}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Strafart auswählen" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([categoryKey, categoryName]) => (
+                        <div key={categoryKey}>
+                          <div className="px-2 py-1 text-sm font-medium text-muted-foreground">
+                            {categoryName}
+                          </div>
+                          {penaltyTypes
+                            .filter(pt => pt.category === categoryKey)
+                            .map((penaltyType) => (
+                              <SelectItem key={penaltyType.id} value={penaltyType.id}>
+                                {penaltyType.name} ({penaltyType.amount.toFixed(2)}€)
+                              </SelectItem>
+                            ))}
+                        </div>
                       ))}
-                  </SelectContent>
-                </Select>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label htmlFor="amount">Betrag (€) *</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    step="0.01"
+                    value={formData.amount}
+                    onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="date">Datum *</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    value={formData.date}
+                    onChange={(e) => setFormData({...formData, date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="notes">Notizen</Label>
+                  <Textarea
+                    id="notes"
+                    value={formData.notes}
+                    onChange={(e) => setFormData({...formData, notes: e.target.value})}
+                    placeholder="Zusätzliche Informationen..."
+                  />
+                </div>
               </div>
-              <div>
-                <Label htmlFor="category">Kategorie *</Label>
-                <Select value={formData.category} onValueChange={handleCategoryChange}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Object.entries(PENALTY_CATEGORIES).map(([key, value]) => (
-                      <SelectItem key={key} value={key}>{value}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="amount">Betrag (€) *</Label>
-                <Input
-                  id="amount"
-                  type="number"
-                  step="0.01"
-                  value={formData.amount}
-                  onChange={(e) => setFormData({...formData, amount: parseFloat(e.target.value) || 0})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="date">Datum *</Label>
-                <Input
-                  id="date"
-                  type="date"
-                  value={formData.date}
-                  onChange={(e) => setFormData({...formData, date: e.target.value})}
-                />
-              </div>
-              <div>
-                <Label htmlFor="notes">Notizen</Label>
-                <Textarea
-                  id="notes"
-                  value={formData.notes}
-                  onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                  placeholder="Zusätzliche Informationen..."
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                Abbrechen
-              </Button>
-              <Button onClick={handleAddPenalty} disabled={!formData.member_id}>
-                Hinzufügen
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                  Abbrechen
+                </Button>
+                <Button onClick={handleAddPenalty} disabled={!formData.member_id || !formData.penalty_type_id}>
+                  Hinzufügen
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
       <Card>
@@ -280,6 +323,7 @@ const PenaltyManagement = () => {
             <TableHeader>
               <TableRow>
                 <TableHead>Mitglied</TableHead>
+                <TableHead>Strafart</TableHead>
                 <TableHead>Kategorie</TableHead>
                 <TableHead>Betrag</TableHead>
                 <TableHead>Datum</TableHead>
@@ -296,8 +340,11 @@ const PenaltyManagement = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="outline">
-                      {PENALTY_CATEGORIES[penalty.category]}
+                    <div className="font-medium">{getPenaltyTypeName(penalty.penalty_type_id)}</div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge variant={getCategoryBadgeVariant(getPenaltyTypeCategory(penalty.penalty_type_id))}>
+                      {PENALTY_CATALOG_CATEGORIES[getPenaltyTypeCategory(penalty.penalty_type_id) as keyof typeof PENALTY_CATALOG_CATEGORIES]}
                     </Badge>
                   </TableCell>
                   <TableCell>
@@ -367,14 +414,25 @@ const PenaltyManagement = () => {
               </Select>
             </div>
             <div>
-              <Label htmlFor="edit_category">Kategorie *</Label>
-              <Select value={formData.category} onValueChange={handleCategoryChange}>
+              <Label htmlFor="edit_penalty_type_id">Strafart *</Label>
+              <Select value={formData.penalty_type_id} onValueChange={handlePenaltyTypeChange}>
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Strafart auswählen" />
                 </SelectTrigger>
                 <SelectContent>
-                  {Object.entries(PENALTY_CATEGORIES).map(([key, value]) => (
-                    <SelectItem key={key} value={key}>{value}</SelectItem>
+                  {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([categoryKey, categoryName]) => (
+                    <div key={categoryKey}>
+                      <div className="px-2 py-1 text-sm font-medium text-muted-foreground">
+                        {categoryName}
+                      </div>
+                      {penaltyTypes
+                        .filter(pt => pt.category === categoryKey)
+                        .map((penaltyType) => (
+                          <SelectItem key={penaltyType.id} value={penaltyType.id}>
+                            {penaltyType.name} ({penaltyType.amount.toFixed(2)}€)
+                          </SelectItem>
+                        ))}
+                    </div>
                   ))}
                 </SelectContent>
               </Select>
@@ -412,7 +470,7 @@ const PenaltyManagement = () => {
             <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleEditPenalty} disabled={!formData.member_id}>
+            <Button onClick={handleEditPenalty} disabled={!formData.member_id || !formData.penalty_type_id}>
               Speichern
             </Button>
           </DialogFooter>
@@ -431,7 +489,7 @@ const PenaltyManagement = () => {
           {deletingPenalty && (
             <div className="p-4 bg-muted/30 rounded-lg">
               <p><strong>Mitglied:</strong> {getMemberDisplayName(deletingPenalty.member_id)}</p>
-              <p><strong>Kategorie:</strong> {PENALTY_CATEGORIES[deletingPenalty.category]}</p>
+              <p><strong>Strafart:</strong> {getPenaltyTypeName(deletingPenalty.penalty_type_id)}</p>
               <p><strong>Betrag:</strong> {deletingPenalty.amount}€</p>
               <p><strong>Datum:</strong> {formatDate(deletingPenalty.date)}</p>
             </div>

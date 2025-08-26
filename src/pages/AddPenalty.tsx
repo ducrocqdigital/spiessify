@@ -10,33 +10,39 @@ import { ArrowLeft, Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
-import { PENALTY_CATEGORIES, PENALTY_AMOUNTS, PenaltyCategory, Member } from '@/types';
+import { penaltyCatalogService } from '@/services/penaltyCatalogService';
+import { PenaltyCatalog, PENALTY_CATALOG_CATEGORIES, Member } from '@/types';
 
 const AddPenalty = () => {
   const [members, setMembers] = useState<Member[]>([]);
+  const [penaltyTypes, setPenaltyTypes] = useState<PenaltyCatalog[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [memberId, setMemberId] = useState('');
-  const [category, setCategory] = useState<PenaltyCategory>('uniform');
-  const [amount, setAmount] = useState<number>(PENALTY_AMOUNTS.uniform);
+  const [penaltyTypeId, setPenaltyTypeId] = useState('');
+  const [amount, setAmount] = useState<number>(0);
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
 
   useEffect(() => {
-    loadMembers();
+    loadData();
   }, []);
 
-  const loadMembers = async () => {
+  const loadData = async () => {
     try {
-      const activeMembers = await memberService.getActive();
+      const [activeMembers, activePenaltyTypes] = await Promise.all([
+        memberService.getActive(),
+        penaltyCatalogService.getActive()
+      ]);
       setMembers(activeMembers);
+      setPenaltyTypes(activePenaltyTypes);
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Mitglieder konnten nicht geladen werden.",
+        description: "Daten konnten nicht geladen werden.",
         variant: "destructive",
       });
     } finally {
@@ -44,9 +50,10 @@ const AddPenalty = () => {
     }
   };
 
-  const handleCategoryChange = (value: PenaltyCategory) => {
-    setCategory(value);
-    setAmount(PENALTY_AMOUNTS[value]);
+  const handlePenaltyTypeChange = (value: string) => {
+    const penaltyType = penaltyTypes.find(pt => pt.id === value);
+    setPenaltyTypeId(value);
+    setAmount(penaltyType?.amount || 0);
   };
 
   const handleMemberSelect = (id: string, event?: React.MouseEvent | React.TouchEvent) => {
@@ -74,10 +81,10 @@ const AddPenalty = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!memberId || !category) {
+    if (!memberId || !penaltyTypeId) {
       toast({
         title: "Fehler",
-        description: "Bitte wählen Sie ein Mitglied und eine Kategorie aus.",
+        description: "Bitte wählen Sie ein Mitglied und eine Strafart aus.",
         variant: "destructive",
       });
       return;
@@ -86,7 +93,7 @@ const AddPenalty = () => {
     try {
       await penaltyService.create({
         member_id: memberId,
-        category,
+        penalty_type_id: penaltyTypeId,
         amount,
         notes: notes || undefined
       });
@@ -104,6 +111,10 @@ const AddPenalty = () => {
         variant: "destructive",
       });
     }
+  };
+
+  const getPenaltyTypesByCategory = (category: string) => {
+    return penaltyTypes.filter(pt => pt.category === category);
   };
 
   // Full-screen member selection overlay
@@ -238,27 +249,39 @@ const AddPenalty = () => {
               )}
             </div>
 
-            {/* Step 2: Select Category */}
+            {/* Step 2: Select Penalty Type */}
             <div className="space-y-4">
-              <Label className="text-lg font-semibold">2. Kategorie wählen</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-w-4xl">
-                {Object.entries(PENALTY_CATEGORIES).map(([key, label]) => (
-                  <Button
-                    key={key}
-                    type="button"
-                    variant={category === key ? "default" : "outline"}
-                    className={`h-16 justify-between transition-all duration-300 smooth-hover tap-animation ${
-                      category === key 
-                        ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
-                        : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
-                    }`}
-                    onClick={() => handleCategoryChange(key as PenaltyCategory)}
-                  >
-                    <span className="font-medium">{label}</span>
-                    <span className="font-mono font-bold">{PENALTY_AMOUNTS[key as PenaltyCategory]}€</span>
-                    {category === key && <Check className="w-5 h-5" />}
-                  </Button>
-                ))}
+              <Label className="text-lg font-semibold">2. Strafart wählen</Label>
+              <div className="space-y-6 max-w-4xl">
+                {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([categoryKey, categoryName]) => {
+                  const categoryPenaltyTypes = getPenaltyTypesByCategory(categoryKey);
+                  if (categoryPenaltyTypes.length === 0) return null;
+                  
+                  return (
+                    <div key={categoryKey} className="space-y-3">
+                      <h3 className="font-medium text-muted-foreground">{categoryName}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {categoryPenaltyTypes.map((penaltyType) => (
+                          <Button
+                            key={penaltyType.id}
+                            type="button"
+                            variant={penaltyTypeId === penaltyType.id ? "default" : "outline"}
+                            className={`h-16 justify-between transition-all duration-300 smooth-hover tap-animation ${
+                              penaltyTypeId === penaltyType.id 
+                                ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
+                                : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
+                            }`}
+                            onClick={() => handlePenaltyTypeChange(penaltyType.id)}
+                          >
+                            <span className="font-medium text-left flex-1">{penaltyType.name}</span>
+                            <span className="font-mono font-bold">{penaltyType.amount.toFixed(2)}€</span>
+                            {penaltyTypeId === penaltyType.id && <Check className="w-5 h-5 ml-2" />}
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
@@ -273,7 +296,7 @@ const AddPenalty = () => {
                 placeholder="0"
                 className="h-16 text-xl font-mono text-center"
                 min="0"
-                step="0.5"
+                step="0.01"
               />
             </div>
 
@@ -293,7 +316,7 @@ const AddPenalty = () => {
             <Button
               type="submit"
               className="w-full max-w-md h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
-              disabled={!memberId || !category}
+              disabled={!memberId || !penaltyTypeId}
             >
               <Check className="w-5 h-5 mr-2" />
               Strafe hinzufügen

@@ -16,19 +16,31 @@ export interface Member {
   totalAmount?: number;
 }
 
+export interface PenaltyCatalog {
+  id: string;
+  name: string;
+  category: PenaltyCatalogCategory;
+  amount: number;
+  description?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Penalty {
   id: string;
   member_id: string;
-  category: PenaltyCategory;
+  penalty_type_id: string;
   amount: number;
   date: string;
   notes?: string;
   created_at: string;
   updated_at: string;
   member?: Member;
+  penalty_type?: PenaltyCatalog;
 }
 
-export type PenaltyCategory = 'uniform' | 'marsch' | 'sonstiges';
+export type PenaltyCatalogCategory = 'timing' | 'soziales' | 'abnahme' | 'maschieren' | 'sonstiges';
 
 export type MemberRank = 
   | 'rekrut'
@@ -45,16 +57,12 @@ export type MemberRank =
   | 'major'
   | 'oberst';
 
-export const PENALTY_CATEGORIES = {
-  uniform: 'Uniform',
-  marsch: 'Marsch',
+export const PENALTY_CATALOG_CATEGORIES = {
+  timing: 'Timing',
+  soziales: 'Soziales', 
+  abnahme: 'Abnahme',
+  maschieren: 'Maschieren',
   sonstiges: 'Sonstiges'
-} as const;
-
-export const PENALTY_AMOUNTS = {
-  uniform: 5,
-  marsch: 10,
-  sonstiges: 15
 } as const;
 
 export const MEMBER_RANKS = {

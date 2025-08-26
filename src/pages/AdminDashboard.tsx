@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
-import { Penalty, PENALTY_CATEGORIES } from '@/types';
+import { Penalty } from '@/types';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -193,7 +193,7 @@ const AdminDashboard = () => {
                         {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {PENALTY_CATEGORIES[penalty.category]} • {penalty.date}
+                        {penalty.penalty_type?.name || 'Unbekannt'} • {penalty.date}
                       </div>
                     </div>
                     <div className="text-right">
