@@ -249,10 +249,10 @@ const AddPenalty = () => {
         </div>
 
         {/* Step content */}
-        <div className="flex-1 p-4 flex flex-col">
+        <div className="flex-1 p-4 flex flex-col overflow-hidden">
           {/* Member Selection */}
           {currentStep === 'member' && (
-            <div className="grid gap-2 grid-cols-3 flex-1 auto-rows-fr">
+            <div className="grid gap-3 grid-cols-3 flex-1 overflow-y-auto">
               {members.map((member, index) => (
                 <Button
                   key={member.id}
@@ -260,17 +260,17 @@ const AddPenalty = () => {
                   variant="outline"
                   onClick={(e) => handleMemberSelect(member.id, e)}
                   disabled={isSelectionDisabled}
-                  className="h-full min-h-16 py-2 px-2 flex flex-col justify-center text-center animate-fade-in"
+                  className="h-auto min-h-20 py-3 px-2 flex flex-col justify-center text-center animate-fade-in whitespace-normal"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <div className="text-base font-semibold leading-tight">
+                  <div className="text-sm font-semibold leading-tight break-words">
                     {member.first_name}
                   </div>
-                  <div className="text-base font-semibold leading-tight">
+                  <div className="text-sm font-semibold leading-tight break-words">
                     {member.last_name}
                   </div>
                   {member.nickname && (
-                    <div className="text-sm opacity-70 leading-tight">
+                    <div className="text-xs opacity-70 leading-tight break-words mt-1">
                       "{member.nickname}"
                     </div>
                   )}
