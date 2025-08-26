@@ -72,6 +72,7 @@ export const penaltyService = {
     member_id: string;
     penalty_type_id: string;
     amount: number;
+    multiplier?: number;
     date?: string;
     notes?: string;
     location_latitude?: number;

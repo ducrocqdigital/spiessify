@@ -24,6 +24,7 @@ const AddPenalty = () => {
   const [memberId, setMemberId] = useState('');
   const [penaltyTypeId, setPenaltyTypeId] = useState('');
   const [amount, setAmount] = useState<number>(0);
+  const [multiplier, setMultiplier] = useState<number>(1);
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
@@ -69,6 +70,7 @@ const AddPenalty = () => {
     const penaltyType = penaltyTypes.find(pt => pt.id === value);
     setPenaltyTypeId(value);
     setAmount(penaltyType?.amount || 0);
+    setMultiplier(1);
   };
 
   const handleMemberSelect = (id: string, event?: React.MouseEvent | React.TouchEvent) => {
@@ -106,10 +108,14 @@ const AddPenalty = () => {
     }
 
     try {
+      const selectedPenaltyType = penaltyTypes.find(pt => pt.id === penaltyTypeId);
+      const finalAmount = selectedPenaltyType?.has_multiplier ? selectedPenaltyType.amount * multiplier : amount;
+
       await penaltyService.create({
         member_id: memberId,
         penalty_type_id: penaltyTypeId,
-        amount,
+        amount: finalAmount,
+        multiplier: selectedPenaltyType?.has_multiplier ? multiplier : undefined,
         notes: notes || undefined,
         location_latitude: location?.latitude,
         location_longitude: location?.longitude,
@@ -279,21 +285,24 @@ const AddPenalty = () => {
                       <h3 className="font-medium text-muted-foreground">{categoryName}</h3>
                       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                         {categoryPenaltyTypes.map((penaltyType) => (
-                          <Button
-                            key={penaltyType.id}
-                            type="button"
-                            variant={penaltyTypeId === penaltyType.id ? "default" : "outline"}
-                            className={`h-16 justify-between transition-all duration-300 smooth-hover tap-animation ${
-                              penaltyTypeId === penaltyType.id 
-                                ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
-                                : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
-                            }`}
-                            onClick={() => handlePenaltyTypeChange(penaltyType.id)}
-                          >
-                            <span className="font-medium text-left flex-1">{penaltyType.name}</span>
-                            <span className="font-mono font-bold">{penaltyType.amount.toFixed(2)}€</span>
-                            {penaltyTypeId === penaltyType.id && <Check className="w-5 h-5 ml-2" />}
-                          </Button>
+                           <Button
+                             key={penaltyType.id}
+                             type="button"
+                             variant={penaltyTypeId === penaltyType.id ? "default" : "outline"}
+                             className={`h-16 justify-between transition-all duration-300 smooth-hover tap-animation ${
+                               penaltyTypeId === penaltyType.id 
+                                 ? "bg-primary text-primary-foreground shadow-lg scale-105 ring-2 ring-primary/50" 
+                                 : "hover:bg-primary/5 hover:scale-102 hover:shadow-md"
+                             }`}
+                             onClick={() => handlePenaltyTypeChange(penaltyType.id)}
+                           >
+                             <span className="font-medium text-left flex-1">
+                               {penaltyType.name}
+                               {penaltyType.has_multiplier && <span className="text-xs opacity-70 block">pro Einheit</span>}
+                             </span>
+                             <span className="font-mono font-bold">{penaltyType.amount.toFixed(2)}€</span>
+                             {penaltyTypeId === penaltyType.id && <Check className="w-5 h-5 ml-2" />}
+                           </Button>
                         ))}
                       </div>
                     </div>
@@ -302,20 +311,45 @@ const AddPenalty = () => {
               </div>
             </div>
 
-            {/* Step 3: Adjust Amount */}
-            <div className="space-y-4 max-w-md">
-              <Label htmlFor="amount" className="text-lg font-semibold">3. Betrag (€)</Label>
-              <Input
-                id="amount"
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(Number(e.target.value))}
-                placeholder="0"
-                className="h-16 text-xl font-mono text-center"
-                min="0"
-                step="0.01"
-              />
-            </div>
+            {/* Step 3: Amount/Multiplier */}
+            {penaltyTypeId && (
+              <div className="space-y-4 max-w-md">
+                {penaltyTypes.find(pt => pt.id === penaltyTypeId)?.has_multiplier ? (
+                  <>
+                    <Label htmlFor="multiplier" className="text-lg font-semibold">3. Anzahl</Label>
+                    <Input
+                      id="multiplier"
+                      type="number"
+                      value={multiplier}
+                      onChange={(e) => setMultiplier(Number(e.target.value) || 1)}
+                      placeholder="1"
+                      className="h-16 text-xl font-mono text-center"
+                      min="1"
+                    />
+                    <div className="p-4 bg-muted/30 rounded-lg">
+                      <div className="text-sm text-muted-foreground mb-2">Berechnung:</div>
+                      <div className="text-xl font-bold font-mono text-center">
+                        {penaltyTypes.find(pt => pt.id === penaltyTypeId)?.amount.toFixed(2)}€ × {multiplier} = {((penaltyTypes.find(pt => pt.id === penaltyTypeId)?.amount || 0) * multiplier).toFixed(2)}€
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <Label htmlFor="amount" className="text-lg font-semibold">3. Betrag (€)</Label>
+                    <Input
+                      id="amount"
+                      type="number"
+                      value={amount}
+                      onChange={(e) => setAmount(Number(e.target.value))}
+                      placeholder="0"
+                      className="h-16 text-xl font-mono text-center"
+                      min="0"
+                      step="0.01"
+                    />
+                  </>
+                )}
+              </div>
+            )}
 
             {/* Location Status */}
             {locationStatus !== 'none' && (

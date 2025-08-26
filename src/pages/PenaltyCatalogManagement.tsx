@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from '@/hooks/use-toast';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { PenaltyCatalog, PENALTY_CATALOG_CATEGORIES, PenaltyCatalogCategory } from '@/types';
@@ -27,7 +28,8 @@ const PenaltyCatalogManagement = () => {
     name: '',
     category: 'timing' as PenaltyCatalogCategory,
     amount: 0,
-    description: ''
+    description: '',
+    has_multiplier: false
   });
 
   useEffect(() => {
@@ -57,9 +59,10 @@ const PenaltyCatalogManagement = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      category: 'timing',
+      category: 'timing' as PenaltyCatalogCategory,
       amount: 0,
-      description: ''
+      description: '',
+      has_multiplier: false
     });
   };
 
@@ -137,7 +140,8 @@ const PenaltyCatalogManagement = () => {
       name: penaltyType.name,
       category: penaltyType.category,
       amount: penaltyType.amount,
-      description: penaltyType.description || ''
+      description: penaltyType.description || '',
+      has_multiplier: penaltyType.has_multiplier
     });
     setIsEditDialogOpen(true);
   };
@@ -224,6 +228,16 @@ const PenaltyCatalogManagement = () => {
                   onChange={(e) => setFormData({...formData, description: e.target.value})}
                   placeholder="Zusätzliche Informationen zur Strafart..."
                 />
+              </div>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="has_multiplier"
+                  checked={formData.has_multiplier}
+                  onCheckedChange={(checked) => setFormData({...formData, has_multiplier: !!checked})}
+                />
+                <Label htmlFor="has_multiplier" className="text-sm font-normal">
+                  Multiplikator verwenden (z.B. für minutenbasierte Strafen)
+                </Label>
               </div>
             </div>
             <DialogFooter>
@@ -356,6 +370,16 @@ const PenaltyCatalogManagement = () => {
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
                 placeholder="Zusätzliche Informationen zur Strafart..."
               />
+            </div>
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="edit_has_multiplier"
+                checked={formData.has_multiplier}
+                onCheckedChange={(checked) => setFormData({...formData, has_multiplier: !!checked})}
+              />
+              <Label htmlFor="edit_has_multiplier" className="text-sm font-normal">
+                Multiplikator verwenden (z.B. für minutenbasierte Strafen)
+              </Label>
             </div>
           </div>
           <DialogFooter>

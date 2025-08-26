@@ -22,6 +22,7 @@ export interface PenaltyCatalog {
   category: PenaltyCatalogCategory;
   amount: number;
   description?: string;
+  has_multiplier: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -32,6 +33,7 @@ export interface Penalty {
   member_id: string;
   penalty_type_id: string;
   amount: number;
+  multiplier?: number;
   date: string;
   notes?: string;
   created_at: string;

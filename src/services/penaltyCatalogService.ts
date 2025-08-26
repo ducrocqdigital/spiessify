@@ -46,6 +46,7 @@ export const penaltyCatalogService = {
     category: PenaltyCatalogCategory;
     amount: number;
     description?: string;
+    has_multiplier?: boolean;
   }): Promise<PenaltyCatalog> {
     const { data, error } = await supabase
       .from('penalty_catalog')

@@ -72,6 +72,7 @@ export type Database = {
           location_latitude: number | null
           location_longitude: number | null
           member_id: string
+          multiplier: number | null
           notes: string | null
           penalty_type_id: string | null
           updated_at: string
@@ -85,6 +86,7 @@ export type Database = {
           location_latitude?: number | null
           location_longitude?: number | null
           member_id: string
+          multiplier?: number | null
           notes?: string | null
           penalty_type_id?: string | null
           updated_at?: string
@@ -98,6 +100,7 @@ export type Database = {
           location_latitude?: number | null
           location_longitude?: number | null
           member_id?: string
+          multiplier?: number | null
           notes?: string | null
           penalty_type_id?: string | null
           updated_at?: string
@@ -125,6 +128,7 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          has_multiplier: boolean
           id: string
           is_active: boolean
           name: string
@@ -135,6 +139,7 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          has_multiplier?: boolean
           id?: string
           is_active?: boolean
           name: string
@@ -145,6 +150,7 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          has_multiplier?: boolean
           id?: string
           is_active?: boolean
           name?: string
