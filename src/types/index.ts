@@ -3,6 +3,8 @@ export interface Member {
   first_name: string;
   last_name: string;
   nickname?: string;
+  email?: string;
+  phone?: string;
   rank: MemberRank;
   join_year?: number;
   birth_date?: string;

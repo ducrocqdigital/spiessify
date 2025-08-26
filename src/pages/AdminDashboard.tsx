@@ -125,7 +125,15 @@ const AdminDashboard = () => {
               <PlusCircle className="w-6 h-6 mr-3" />
               Neue Strafe hinzufügen
             </Button>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin/members')}
+                className="h-12"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Mitglieder verwalten
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate('/dashboard')}
