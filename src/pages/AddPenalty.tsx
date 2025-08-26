@@ -69,13 +69,16 @@ const AddPenalty = () => {
 
   const loadData = async () => {
     try {
+      console.log('Loading data...');
       const [activeMembers, activePenaltyTypes] = await Promise.all([
         memberService.getActive(),
         penaltyCatalogService.getActive()
       ]);
+      console.log('Data loaded successfully:', { activeMembers, activePenaltyTypes });
       setMembers(activeMembers);
       setPenaltyTypes(activePenaltyTypes);
     } catch (error) {
+      console.error('Error loading data:', error);
       toast({
         title: "Fehler",
         description: "Daten konnten nicht geladen werden.",
