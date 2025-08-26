@@ -206,7 +206,7 @@ const AddPenalty = () => {
     const currentStepIndex = progressSteps.indexOf(currentStep);
 
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden" style={{ height: 'calc(100vh - env(safe-area-inset-top))' }}>
+      <div className="h-screen bg-background flex flex-col overflow-hidden">
         {/* Header with progress and navigation */}
         <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground flex-shrink-0">
           <div className="px-4 py-2">
@@ -249,10 +249,10 @@ const AddPenalty = () => {
         </div>
 
         {/* Step content */}
-        <div className="flex-1 min-h-0 p-4 flex flex-col">
+        <div className="flex-1 p-4 h-0 flex flex-col">
           {/* Member Selection */}
           {currentStep === 'member' && (
-            <div className="grid gap-3 grid-cols-3 flex-1 min-h-0 overflow-y-auto">
+            <div className="grid gap-3 grid-cols-3 h-full overflow-y-auto">
               {members.map((member, index) => (
                 <Button
                   key={member.id}
@@ -278,7 +278,7 @@ const AddPenalty = () => {
 
           {/* Category Selection */}
           {currentStep === 'category' && (
-            <div className="grid gap-4 grid-cols-2">
+            <div className="grid gap-4 grid-cols-2 h-full content-start overflow-y-auto">
               {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([categoryKey, categoryName]) => {
                 const categoryPenaltyTypes = penaltyTypes.filter(pt => pt.category === categoryKey);
                 if (categoryPenaltyTypes.length === 0) return null;
@@ -310,7 +310,7 @@ const AddPenalty = () => {
 
           {/* Penalty Selection */}
           {currentStep === 'penalty' && selectedCategory && (
-            <div className="space-y-3">
+            <div className="space-y-3 h-full overflow-y-auto">
               {penaltyTypes
                 .filter(pt => pt.category === selectedCategory)
                 .map((penaltyType) => (
@@ -335,7 +335,7 @@ const AddPenalty = () => {
 
           {/* Amount/Multiplier */}
           {currentStep === 'amount' && penaltyTypeId && (
-            <div className="space-y-6">
+            <div className="space-y-6 h-full overflow-y-auto">
               <div className="text-center">
                 <h3 className="font-semibold text-lg mb-2">
                   {penaltyTypes.find(pt => pt.id === penaltyTypeId)?.name}
