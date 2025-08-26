@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,43 +7,79 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Check } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { MOCK_MEMBERS } from '@/data/mockData';
-import { PENALTY_CATEGORIES, PENALTY_AMOUNTS, PenaltyCategory } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import { memberService } from '@/services/memberService';
+import { penaltyService } from '@/services/penaltyService';
+import { PENALTY_CATEGORIES, PENALTY_AMOUNTS, PenaltyCategory, Member } from '@/types';
 
 const AddPenalty = () => {
+  const [members, setMembers] = useState<Member[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  
   const [memberId, setMemberId] = useState('');
-  const [category, setCategory] = useState<PenaltyCategory | ''>('');
-  const [amount, setAmount] = useState('');
+  const [category, setCategory] = useState<PenaltyCategory>('uniform');
+  const [amount, setAmount] = useState<number>(PENALTY_AMOUNTS.uniform);
   const [notes, setNotes] = useState('');
+
+  useEffect(() => {
+    loadMembers();
+  }, []);
+
+  const loadMembers = async () => {
+    try {
+      const activeMembers = await memberService.getActive();
+      setMembers(activeMembers);
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Mitglieder konnten nicht geladen werden.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleCategoryChange = (value: PenaltyCategory) => {
     setCategory(value);
-    setAmount(PENALTY_AMOUNTS[value].toString());
+    setAmount(PENALTY_AMOUNTS[value]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!memberId || !category || !amount) {
+    if (!memberId || !category) {
       toast({
-        title: "Unvollständige Eingabe",
-        description: "Bitte alle Pflichtfelder ausfüllen",
+        title: "Fehler",
+        description: "Bitte wählen Sie ein Mitglied und eine Kategorie aus.",
         variant: "destructive",
       });
       return;
     }
 
-    const selectedMember = MOCK_MEMBERS.find(m => m.id === memberId);
-    
-    // In real app, this would save to backend
-    toast({
-      title: "Strafe hinzugefügt",
-      description: `${selectedMember?.name}: ${amount}€ (${PENALTY_CATEGORIES[category as PenaltyCategory]})`,
-    });
+    try {
+      await penaltyService.create({
+        member_id: memberId,
+        category,
+        amount,
+        notes: notes || undefined
+      });
 
-    navigate('/admin');
+      toast({
+        title: "Strafe hinzugefügt",
+        description: `Strafe wurde erfolgreich hinzugefügt.`,
+      });
+
+      navigate('/admin');
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Strafe konnte nicht hinzugefügt werden.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -83,11 +119,17 @@ const AddPenalty = () => {
                     <SelectValue placeholder="Schütze wählen..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {MOCK_MEMBERS.map((member) => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.name}
-                      </SelectItem>
-                    ))}
+                    {loading ? (
+                      <SelectItem value="loading" disabled>Laden...</SelectItem>
+                    ) : members.length === 0 ? (
+                      <SelectItem value="empty" disabled>Keine aktiven Mitglieder</SelectItem>
+                    ) : (
+                      members.map((member) => (
+                        <SelectItem key={member.id} value={member.id}>
+                          {memberService.getDisplayName(member)}
+                        </SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>
@@ -119,7 +161,7 @@ const AddPenalty = () => {
                   id="amount"
                   type="number"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => setAmount(Number(e.target.value))}
                   placeholder="0"
                   className="h-12 text-lg font-mono text-center"
                   min="0"
@@ -143,7 +185,7 @@ const AddPenalty = () => {
               <Button
                 type="submit"
                 className="w-full h-14 text-lg bg-gradient-to-r from-primary to-primary-glow"
-                disabled={!memberId || !category || !amount}
+                disabled={!memberId || !category}
               >
                 <Check className="w-5 h-5 mr-2" />
                 Strafe hinzufügen

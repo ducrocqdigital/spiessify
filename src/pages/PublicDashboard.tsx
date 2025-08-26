@@ -1,26 +1,46 @@
-import { useState } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Trophy, Medal, Award, Filter, Users, Euro, Calendar } from 'lucide-react';
-import { MOCK_MEMBERS, MOCK_PENALTIES } from '@/data/mockData';
-import { PENALTY_CATEGORIES } from '@/types';
+import { memberService } from '@/services/memberService';
+import { penaltyService } from '@/services/penaltyService';
+import { PENALTY_CATEGORIES, Member, Penalty } from '@/types';
+
+type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
 
 const PublicDashboard = () => {
-  const [filterCategory, setFilterCategory] = useState<string>('all');
-  const [filterDate, setFilterDate] = useState<string>('all');
+  const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
+  const [members, setMembers] = useState<Member[]>([]);
+  const [penalties, setPenalties] = useState<Penalty[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [membersData, penaltiesData] = await Promise.all([
+        memberService.getMembersWithStats(),
+        penaltyService.getAll()
+      ]);
+      
+      setMembers(membersData);
+      setPenalties(penaltiesData);
+    } catch (error) {
+      console.error('Failed to load dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Sort members by total amount (descending)
-  const sortedMembers = [...MOCK_MEMBERS]
-    .sort((a, b) => b.totalAmount - a.totalAmount);
-
-  // Filter penalties based on selected filters
-  const filteredPenalties = MOCK_PENALTIES.filter(penalty => {
-    const categoryMatch = filterCategory === 'all' || penalty.category === filterCategory;
-    const dateMatch = filterDate === 'all' || penalty.date === filterDate;
-    return categoryMatch && dateMatch;
-  });
+  const sortedMembers = useMemo(() => {
+    if (loading) return [];
+    return [...members].sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+  }, [members, loading]);
 
   const getPositionIcon = (index: number) => {
     switch (index) {
@@ -48,8 +68,6 @@ const PublicDashboard = () => {
     }
   };
 
-  const uniqueDates = [...new Set(MOCK_PENALTIES.map(p => p.date))].sort().reverse();
-
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -70,14 +88,14 @@ const PublicDashboard = () => {
           <Card>
             <CardContent className="p-4 text-center">
               <Users className="w-8 h-8 mx-auto text-primary mb-2" />
-              <div className="text-2xl font-bold">{MOCK_MEMBERS.length}</div>
+              <div className="text-2xl font-bold">{loading ? '...' : members.length}</div>
               <div className="text-sm text-muted-foreground">Schützen</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
               <Filter className="w-8 h-8 mx-auto text-primary mb-2" />
-              <div className="text-2xl font-bold">{filteredPenalties.length}</div>
+              <div className="text-2xl font-bold">{loading ? '...' : penalties.length}</div>
               <div className="text-sm text-muted-foreground">Strafen</div>
             </CardContent>
           </Card>
@@ -85,7 +103,7 @@ const PublicDashboard = () => {
             <CardContent className="p-4 text-center">
               <Euro className="w-8 h-8 mx-auto text-primary mb-2" />
               <div className="text-2xl font-bold">
-                {filteredPenalties.reduce((sum, p) => sum + p.amount, 0)}€
+                {loading ? '...' : `${penalties.reduce((sum, p) => sum + Number(p.amount), 0)}€`}
               </div>
               <div className="text-sm text-muted-foreground">Gesamt</div>
             </CardContent>
@@ -93,53 +111,13 @@ const PublicDashboard = () => {
           <Card>
             <CardContent className="p-4 text-center">
               <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
-              <div className="text-2xl font-bold">{uniqueDates.length}</div>
+              <div className="text-2xl font-bold">
+                {loading ? '...' : new Set(penalties.map(p => p.date)).size}
+              </div>
               <div className="text-sm text-muted-foreground">Tage</div>
             </CardContent>
           </Card>
         </div>
-
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="w-5 h-5" />
-              Filter
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nach Kategorie</label>
-                <Select value={filterCategory} onValueChange={setFilterCategory}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Kategorien</SelectItem>
-                    {Object.entries(PENALTY_CATEGORIES).map(([key, label]) => (
-                      <SelectItem key={key} value={key}>{label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Nach Datum</label>
-                <Select value={filterDate} onValueChange={setFilterDate}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Tage</SelectItem>
-                    {uniqueDates.map(date => (
-                      <SelectItem key={date} value={date}>{date}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Leaderboard */}
         <Card>
@@ -151,30 +129,38 @@ const PublicDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {sortedMembers.map((member, index) => (
-                <div
-                  key={member.id}
-                  className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-md ${getPositionClass(index)}`}
-                >
-                  <div className="flex items-center gap-4">
-                    {getPositionIcon(index)}
-                    <div>
-                      <div className="font-medium">{member.name}</div>
-                      <div className="text-sm text-muted-foreground">
-                        {member.totalPenalties} Strafen
+              {loading ? (
+                <div className="text-center text-muted-foreground py-8">Laden...</div>
+              ) : sortedMembers.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">Keine Daten vorhanden</div>
+              ) : (
+                sortedMembers.map((member, index) => (
+                  <div
+                    key={member.id}
+                    className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-md ${getPositionClass(index)}`}
+                  >
+                    <div className="flex items-center gap-4">
+                      {getPositionIcon(index)}
+                      <div>
+                        <div className="font-medium">{memberService.getDisplayName(member)}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {member.totalPenalties || 0} Strafen
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-primary">
-                      {member.totalAmount}€
+                    <div className="text-right">
+                      <div className="text-xl font-bold text-primary">
+                        {member.totalAmount || 0}€
+                      </div>
+                      {(member.totalPenalties || 0) > 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          ⌀ {((member.totalAmount || 0) / (member.totalPenalties || 1)).toFixed(1)}€
+                        </Badge>
+                      )}
                     </div>
-                    <Badge variant="secondary" className="text-xs">
-                      ⌀ {(member.totalAmount / member.totalPenalties).toFixed(1)}€
-                    </Badge>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
@@ -186,27 +172,35 @@ const PublicDashboard = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {filteredPenalties.slice(0, 10).map((penalty) => (
-                <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                  <div>
-                    <div className="font-medium">{penalty.memberName}</div>
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Badge variant="outline" className="text-xs">
-                        {PENALTY_CATEGORIES[penalty.category]}
-                      </Badge>
-                      <span>{penalty.date}</span>
-                    </div>
-                    {penalty.notes && (
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {penalty.notes}
+              {loading ? (
+                <div className="text-center text-muted-foreground py-8">Laden...</div>
+              ) : penalties.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8">Keine Strafen vorhanden</div>
+              ) : (
+                penalties.slice(0, 10).map((penalty) => (
+                  <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                    <div>
+                      <div className="font-medium">
+                        {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
                       </div>
-                    )}
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Badge variant="outline" className="text-xs">
+                          {PENALTY_CATEGORIES[penalty.category]}
+                        </Badge>
+                        <span>{penalty.date}</span>
+                      </div>
+                      {penalty.notes && (
+                        <div className="text-xs text-muted-foreground mt-1">
+                          {penalty.notes}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      {penalty.amount}€
+                    </div>
                   </div>
-                  <div className="text-lg font-bold text-primary">
-                    {penalty.amount}€
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
