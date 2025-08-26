@@ -85,17 +85,22 @@ const AdminDashboard = () => {
             <CardContent className="p-4 text-center">
               <Crown className="w-8 h-8 mx-auto text-warning mb-2" />
               {loading ? (
-                <div className="text-sm text-muted-foreground">Laden...</div>
+                <>
+                  <div className="text-2xl font-bold">...</div>
+                  <div className="text-sm text-muted-foreground">Zugsau</div>
+                </>
               ) : zugsau ? (
                 <>
-                  <div className="text-lg font-bold text-warning">{zugsau.totalAmount}€</div>
-                  <div className="text-sm text-muted-foreground font-medium">
+                  <div className="text-2xl font-bold text-warning">{zugsau.totalAmount}€</div>
+                  <div className="text-sm text-muted-foreground">
                     {memberService.getDisplayName(zugsau.member)}
                   </div>
-                  <div className="text-xs text-muted-foreground">Zugsau</div>
                 </>
               ) : (
-                <div className="text-sm text-muted-foreground">Keine Strafen</div>
+                <>
+                  <div className="text-2xl font-bold">0€</div>
+                  <div className="text-sm text-muted-foreground">Zugsau</div>
+                </>
               )}
             </CardContent>
           </Card>
