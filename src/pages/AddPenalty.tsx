@@ -93,7 +93,7 @@ const AddPenalty = () => {
     return (
       <div className="fixed inset-0 bg-background z-50 flex flex-col">
         {/* Cancel button */}
-        <div className="absolute top-4 right-4 z-10">
+        <div className="absolute top-2 right-2 z-10">
           <Button
             variant="outline"
             size="sm"
@@ -104,35 +104,35 @@ const AddPenalty = () => {
           </Button>
         </div>
         
-        {/* Title */}
-        <div className="p-6 text-center">
-          <h1 className="text-2xl font-bold">Schütze auswählen</h1>
-          <p className="text-muted-foreground">Tippe auf einen Namen</p>
+        {/* Compact title */}
+        <div className="p-3 text-center">
+          <h1 className="text-xl font-bold">Schütze auswählen</h1>
         </div>
         
-        {/* Member grid - uses full viewport */}
-        <div className="flex-1 p-4 overflow-hidden">
-          <div className="h-full grid gap-3 auto-rows-fr" 
+        {/* Member grid - uses nearly full viewport */}
+        <div className="flex-1 px-3 pb-3 overflow-hidden">
+          <div className="h-full grid gap-2" 
                style={{
-                 gridTemplateColumns: `repeat(auto-fit, minmax(140px, 1fr))`,
+                 gridTemplateColumns: 'repeat(3, 1fr)',
+                 gridTemplateRows: `repeat(${Math.ceil(members.length / 3)}, 1fr)`
                }}>
             {members.map((member) => (
               <Button
                 key={member.id}
                 type="button"
                 variant="outline"
-                className="h-full p-3 text-left justify-start transition-all duration-200 hover:bg-primary/5 hover:scale-[1.02] hover:shadow-md flex flex-col"
+                className="h-full p-2 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col"
                 onClick={() => handleMemberSelect(member.id)}
               >
-                <div className="flex flex-col w-full h-full justify-center">
-                  <span className="font-semibold text-sm leading-tight">
+                <div className="flex flex-col w-full h-full justify-center items-center">
+                  <span className="font-bold text-base leading-tight">
                     {member.first_name}
                   </span>
-                  <span className="font-semibold text-sm leading-tight">
+                  <span className="font-bold text-base leading-tight">
                     {member.last_name}
                   </span>
                   {member.nickname && (
-                    <span className="text-xs opacity-70 leading-tight mt-1">
+                    <span className="text-sm opacity-70 leading-tight mt-1">
                       "{member.nickname}"
                     </span>
                   )}
