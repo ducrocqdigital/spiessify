@@ -33,7 +33,8 @@ const MemberManagement = () => {
     birth_date: '',
     join_year: '',
     rank: 'schuetze' as MemberRank,
-    is_active: true
+    is_active: true,
+    profile_photo: ''
   });
 
   useEffect(() => {
@@ -70,7 +71,8 @@ const MemberManagement = () => {
       birth_date: '',
       join_year: '',
       rank: 'schuetze',
-      is_active: true
+      is_active: true,
+      profile_photo: ''
     });
   };
 
@@ -179,7 +181,8 @@ const MemberManagement = () => {
       birth_date: member.birth_date || '',
       join_year: member.join_year?.toString() || '',
       rank: member.rank || 'schuetze',
-      is_active: member.is_active
+      is_active: member.is_active,
+      profile_photo: member.profile_photo || ''
     });
     setIsEditDialogOpen(true);
   };
@@ -221,7 +224,22 @@ const MemberManagement = () => {
                 Fügen Sie ein neues Mitglied zur Schützengesellschaft hinzu.
               </DialogDescription>
             </DialogHeader>
-            <div className="grid grid-cols-2 gap-4 py-4">
+            <div className="grid grid-cols-1 gap-6 py-4">
+              {/* Profile Photo Section */}
+              <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-muted/30">
+                <Avatar className="h-20 w-20">
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <User className="h-10 w-10" />
+                  </AvatarFallback>
+                </Avatar>
+                <ProfilePhotoUpload
+                  memberId="new"
+                  onPhotoUpdated={(photoUrl) => setFormData({...formData, profile_photo: photoUrl})}
+                />
+              </div>
+              
+              {/* Form Fields */}
+              <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label htmlFor="first_name">Vorname *</Label>
                 <Input
@@ -293,6 +311,7 @@ const MemberManagement = () => {
                   value={formData.join_year}
                   onChange={(e) => setFormData({...formData, join_year: e.target.value})}
                 />
+                </div>
               </div>
             </div>
             <DialogFooter>
@@ -332,19 +351,12 @@ const MemberManagement = () => {
               {members.map((member) => (
                 <TableRow key={member.id}>
                   <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-12 w-12">
-                        <AvatarImage src={member.profile_photo} alt={`${member.first_name} ${member.last_name}`} />
-                        <AvatarFallback className="bg-primary/10 text-primary">
-                          <User className="h-6 w-6" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <ProfilePhotoUpload
-                        memberId={member.id}
-                        currentPhotoUrl={member.profile_photo}
-                        onPhotoUpdated={(photoUrl) => handlePhotoUpdated(member.id, photoUrl)}
-                      />
-                    </div>
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={member.profile_photo} alt={`${member.first_name} ${member.last_name}`} />
+                      <AvatarFallback className="bg-primary/10 text-primary">
+                        <User className="h-5 w-5" />
+                      </AvatarFallback>
+                    </Avatar>
                   </TableCell>
                   <TableCell>
                     <div>
@@ -418,7 +430,24 @@ const MemberManagement = () => {
               Bearbeiten Sie die Informationen des Mitglieds.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
+          <div className="grid grid-cols-1 gap-6 py-4">
+            {/* Profile Photo Section */}
+            <div className="flex flex-col items-center gap-4 p-4 border rounded-lg bg-muted/30">
+              <Avatar className="h-20 w-20">
+                <AvatarImage src={editingMember?.profile_photo} alt={`${editingMember?.first_name} ${editingMember?.last_name}`} />
+                <AvatarFallback className="bg-primary/10 text-primary">
+                  <User className="h-10 w-10" />
+                </AvatarFallback>
+              </Avatar>
+              <ProfilePhotoUpload
+                memberId={editingMember?.id || ""}
+                currentPhotoUrl={editingMember?.profile_photo}
+                onPhotoUpdated={(photoUrl) => handlePhotoUpdated(editingMember?.id || "", photoUrl)}
+              />
+            </div>
+            
+            {/* Form Fields */}
+            <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="edit_first_name">Vorname *</Label>
               <Input
@@ -490,6 +519,7 @@ const MemberManagement = () => {
                 value={formData.join_year}
                 onChange={(e) => setFormData({...formData, join_year: e.target.value})}
               />
+              </div>
             </div>
           </div>
           <DialogFooter>

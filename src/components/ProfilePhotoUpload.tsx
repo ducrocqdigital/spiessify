@@ -113,8 +113,17 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
       const croppedBlob = await getCroppedImg(imgRef.current, completedCrop);
       const file = new File([croppedBlob], `profile-${memberId}.jpg`, { type: 'image/jpeg' });
       
-      const photoUrl = await memberService.uploadProfilePhoto(memberId, file);
-      onPhotoUpdated(photoUrl);
+      let photoUrl: string;
+      if (memberId === "new") {
+        // For new members, we'll handle the upload later when the member is created
+        // For now, we'll create a temporary URL
+        const tempUrl = URL.createObjectURL(croppedBlob);
+        onPhotoUpdated(tempUrl);
+        photoUrl = tempUrl;
+      } else {
+        photoUrl = await memberService.uploadProfilePhoto(memberId, file);
+        onPhotoUpdated(photoUrl);
+      }
       
       toast({
         title: "Erfolg",
