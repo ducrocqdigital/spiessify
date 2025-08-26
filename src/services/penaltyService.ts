@@ -11,7 +11,7 @@ export const penaltyService = {
         member:members(*),
         penalty_type:penalty_catalog(*)
       `)
-      .order('created_at', { ascending: false });
+      .order('created_time', { ascending: false });
     
     if (error) throw error;
     return (data || []) as Penalty[];
@@ -27,7 +27,7 @@ export const penaltyService = {
         penalty_type:penalty_catalog(*)
       `)
       .eq('member_id', memberId)
-      .order('created_at', { ascending: false });
+      .order('created_time', { ascending: false });
     
     if (error) throw error;
     return (data || []) as Penalty[];
@@ -42,7 +42,7 @@ export const penaltyService = {
         member:members(*),
         penalty_type:penalty_catalog(*)
       `)
-      .order('created_at', { ascending: false })
+      .order('created_time', { ascending: false })
       .limit(limit);
     
     if (error) throw error;
@@ -61,7 +61,7 @@ export const penaltyService = {
         penalty_type:penalty_catalog(*)
       `)
       .eq('date', today)
-      .order('created_at', { ascending: false });
+      .order('created_time', { ascending: false });
     
     if (error) throw error;
     return (data || []) as Penalty[];
@@ -74,12 +74,15 @@ export const penaltyService = {
     amount: number;
     date?: string;
     notes?: string;
+    location_latitude?: number;
+    location_longitude?: number;
   }): Promise<Penalty> {
     const { data, error } = await supabase
       .from('penalties')
       .insert([{
         ...penalty,
-        date: penalty.date || new Date().toISOString().split('T')[0]
+        date: penalty.date || new Date().toISOString().split('T')[0],
+        created_time: new Date().toISOString()
       }])
       .select(`
         *,

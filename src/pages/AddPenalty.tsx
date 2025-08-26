@@ -6,12 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Check, X } from 'lucide-react';
+import { ArrowLeft, Check, X, MapPin } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { PenaltyCatalog, PENALTY_CATALOG_CATEGORIES, Member } from '@/types';
+import { getCurrentLocation } from '@/utils/dateUtils';
 
 const AddPenalty = () => {
   const [members, setMembers] = useState<Member[]>([]);
@@ -26,9 +27,23 @@ const AddPenalty = () => {
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
+  const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
+  const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error' | 'none'>('none');
 
   useEffect(() => {
     loadData();
+    // Try to get location on mobile devices
+    if (navigator.geolocation && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+      setLocationStatus('loading');
+      getCurrentLocation()
+        .then((coords) => {
+          setLocation(coords);
+          setLocationStatus('success');
+        })
+        .catch(() => {
+          setLocationStatus('error');
+        });
+    }
   }, []);
 
   const loadData = async () => {
@@ -95,7 +110,9 @@ const AddPenalty = () => {
         member_id: memberId,
         penalty_type_id: penaltyTypeId,
         amount,
-        notes: notes || undefined
+        notes: notes || undefined,
+        location_latitude: location?.latitude,
+        location_longitude: location?.longitude,
       });
 
       toast({
@@ -299,6 +316,21 @@ const AddPenalty = () => {
                 step="0.01"
               />
             </div>
+
+            {/* Location Status */}
+            {locationStatus !== 'none' && (
+              <div className="space-y-2 max-w-md">
+                <Label>
+                  <MapPin className="w-4 h-4 inline mr-2" />
+                  Standort
+                </Label>
+                <div className="text-sm text-muted-foreground">
+                  {locationStatus === 'loading' && 'Standort wird ermittelt...'}
+                  {locationStatus === 'success' && 'Standort erfasst ✓'}
+                  {locationStatus === 'error' && 'Standort konnte nicht ermittelt werden'}
+                </div>
+              </div>
+            )}
 
             {/* Optional Notes */}
             <div className="space-y-4 max-w-md">

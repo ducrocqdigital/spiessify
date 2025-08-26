@@ -2,10 +2,13 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Settings } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
+import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { Penalty } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import PenaltyTable from '@/components/PenaltyTable';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -17,8 +20,11 @@ const AdminDashboard = () => {
     activeMembers: 0
   });
   const [zugsau, setZugsau] = useState<{ member: any; totalAmount: number; penaltyCount: number } | null>(null);
-  const [recentPenalties, setRecentPenalties] = useState<Penalty[]>([]);
+  const [penalties, setPenalties] = useState<Penalty[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [penaltyTypes, setPenaltyTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     const isAdmin = localStorage.getItem('isAdmin');
@@ -32,22 +38,60 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [penaltyStats, recent, zugsauData] = await Promise.all([
+      const [penaltyStats, allPenalties, zugsauData, allMembers, activePenaltyTypes] = await Promise.all([
         penaltyService.getStats(),
-        penaltyService.getRecent(5),
-        penaltyService.getZugsau()
+        penaltyService.getAll(),
+        penaltyService.getZugsau(),
+        memberService.getAll(),
+        penaltyCatalogService.getActive()
       ]);
       
       setStats({
         ...penaltyStats,
         totalMembers: penaltyStats.activeMembers
       });
-      setRecentPenalties(recent);
+      setPenalties(allPenalties);
+      setMembers(allMembers);
+      setPenaltyTypes(activePenaltyTypes);
       setZugsau(zugsauData);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleEditPenalty = async (id: string, updates: Partial<Penalty>) => {
+    try {
+      await penaltyService.update(id, updates);
+      await loadDashboardData();
+      toast({
+        title: "Strafe aktualisiert",
+        description: "Die Strafe wurde erfolgreich aktualisiert.",
+      });
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Die Strafe konnte nicht aktualisiert werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeletePenalty = async (id: string) => {
+    try {
+      await penaltyService.delete(id);
+      await loadDashboardData();
+      toast({
+        title: "Strafe gelöscht",
+        description: "Die Strafe wurde erfolgreich gelöscht.",
+      });
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Die Strafe konnte nicht gelöscht werden.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -92,9 +136,9 @@ const AdminDashboard = () => {
               ) : zugsau ? (
                 <>
                   <div className="text-2xl font-bold text-black">
-                    {memberService.getDisplayName(zugsau.member)}
+                    {memberService.getDisplayName(zugsau.member)} ({zugsau.totalAmount}€)
                   </div>
-                  <div className="text-sm text-muted-foreground">Zugsau ({zugsau.totalAmount}€)</div>
+                  <div className="text-sm text-muted-foreground">Zugsau</div>
                 </>
               ) : (
                 <>
@@ -154,11 +198,11 @@ const AdminDashboard = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate('/admin/penalties')}
+                onClick={() => navigate('/admin/penalty-catalog')}
                 className="h-12"
               >
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Strafen verwalten
+                <Settings className="w-4 h-4 mr-2" />
+                Strafenkatalog verwalten
               </Button>
               <Button
                 variant="outline"
@@ -171,41 +215,26 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Recent Penalties */}
+        {/* Penalty Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Neueste Strafen</CardTitle>
+            <CardTitle>Strafenverwaltung</CardTitle>
             <CardDescription>
-              Die letzten hinzugefügten Strafen
+              Alle Strafen mit Bearbeitungs- und Löschfunktionen
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {loading ? (
-                <div className="text-center text-muted-foreground py-4">Laden...</div>
-              ) : recentPenalties.length === 0 ? (
-                <div className="text-center text-muted-foreground py-4">Keine Strafen vorhanden</div>
-              ) : (
-                recentPenalties.map((penalty) => (
-                  <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <div className="font-medium">
-                        {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {penalty.penalty_type?.name || 'Unbekannt'} • {penalty.date}
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-primary">{penalty.amount}€</div>
-                      {penalty.notes && (
-                        <div className="text-xs text-muted-foreground">{penalty.notes}</div>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
+            {loading ? (
+              <div className="text-center text-muted-foreground py-8">Laden...</div>
+            ) : (
+              <PenaltyTable
+                penalties={penalties}
+                onEdit={handleEditPenalty}
+                onDelete={handleDeletePenalty}
+                members={members}
+                penaltyTypes={penaltyTypes}
+              />
+            )}
           </CardContent>
         </Card>
       </div>

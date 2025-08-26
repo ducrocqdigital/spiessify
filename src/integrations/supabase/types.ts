@@ -66,8 +66,11 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
+          created_time: string | null
           date: string
           id: string
+          location_latitude: number | null
+          location_longitude: number | null
           member_id: string
           notes: string | null
           penalty_type_id: string | null
@@ -76,8 +79,11 @@ export type Database = {
         Insert: {
           amount: number
           created_at?: string
+          created_time?: string | null
           date?: string
           id?: string
+          location_latitude?: number | null
+          location_longitude?: number | null
           member_id: string
           notes?: string | null
           penalty_type_id?: string | null
@@ -86,8 +92,11 @@ export type Database = {
         Update: {
           amount?: number
           created_at?: string
+          created_time?: string | null
           date?: string
           id?: string
+          location_latitude?: number | null
+          location_longitude?: number | null
           member_id?: string
           notes?: string | null
           penalty_type_id?: string | null

@@ -36,6 +36,9 @@ export interface Penalty {
   notes?: string;
   created_at: string;
   updated_at: string;
+  created_time?: string;
+  location_latitude?: number;
+  location_longitude?: number;
   member?: Member;
   penalty_type?: PenaltyCatalog;
 }
