@@ -14,6 +14,8 @@ import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { PenaltyCatalog, PENALTY_CATALOG_CATEGORIES, Member } from '@/types';
 import { getCurrentLocation } from '@/utils/dateUtils';
 
+type Step = 'member' | 'category' | 'penalty' | 'amount' | 'final';
+
 const AddPenalty = () => {
   const [members, setMembers] = useState<Member[]>([]);
   const [penaltyTypes, setPenaltyTypes] = useState<PenaltyCatalog[]>([]);
@@ -21,18 +23,34 @@ const AddPenalty = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // Form data
   const [memberId, setMemberId] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('');
   const [penaltyTypeId, setPenaltyTypeId] = useState('');
   const [amount, setAmount] = useState<number>(0);
   const [multiplier, setMultiplier] = useState<number>(1);
   const [notes, setNotes] = useState('');
-  const [showMemberSelection, setShowMemberSelection] = useState(true);
+  
+  // UI state
+  const [currentStep, setCurrentStep] = useState<Step>('member');
+  const [isMobile, setIsMobile] = useState(false);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
   const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error' | 'none'>('none');
 
   useEffect(() => {
     loadData();
+    
+    // Detect mobile
+    const checkMobile = () => {
+      const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isSmallScreen = window.innerWidth < 768;
+      setIsMobile(isMobileDevice || isSmallScreen);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
     // Try to get location on mobile devices
     if (navigator.geolocation && /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
       setLocationStatus('loading');
@@ -45,6 +63,8 @@ const AddPenalty = () => {
           setLocationStatus('error');
         });
     }
+
+    return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
   const loadData = async () => {
@@ -74,25 +94,57 @@ const AddPenalty = () => {
   };
 
   const handleMemberSelect = (id: string, event?: React.MouseEvent | React.TouchEvent) => {
-    // Prevent unwanted selection if already in progress
     if (isSelectionDisabled) return;
     
-    // Prevent default behavior and stop propagation for touch events
     if (event) {
       event.preventDefault();
       event.stopPropagation();
     }
     
-    // Temporarily disable further selections
     setIsSelectionDisabled(true);
-    
     setMemberId(id);
-    setShowMemberSelection(false);
     
-    // Re-enable selection after a short delay
+    if (isMobile) {
+      setCurrentStep('category');
+    }
+    
     setTimeout(() => {
       setIsSelectionDisabled(false);
     }, 500);
+  };
+
+  const handleCategorySelect = (category: string) => {
+    setSelectedCategory(category);
+    setPenaltyTypeId('');
+    setCurrentStep('penalty');
+  };
+
+  const handlePenaltySelect = (penaltyId: string) => {
+    const penaltyType = penaltyTypes.find(pt => pt.id === penaltyId);
+    setPenaltyTypeId(penaltyId);
+    setAmount(penaltyType?.amount || 0);
+    setMultiplier(1);
+    setCurrentStep('amount');
+  };
+
+  const handleBackStep = () => {
+    switch (currentStep) {
+      case 'category':
+        setCurrentStep('member');
+        setMemberId('');
+        break;
+      case 'penalty':
+        setCurrentStep('category');
+        setSelectedCategory('');
+        break;
+      case 'amount':
+        setCurrentStep('penalty');
+        setPenaltyTypeId('');
+        break;
+      case 'final':
+        setCurrentStep('amount');
+        break;
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -140,75 +192,213 @@ const AddPenalty = () => {
     return penaltyTypes.filter(pt => pt.category === category);
   };
 
-  // Full-screen member selection overlay
-  if (showMemberSelection && !loading && members.length > 0) {
+  // Mobile step-by-step workflow
+  if (isMobile && !loading) {
+    const stepTitle = {
+      member: 'Schütze auswählen',
+      category: 'Kategorie wählen', 
+      penalty: 'Strafe wählen',
+      amount: 'Betrag/Anzahl',
+      final: 'Zusammenfassung'
+    };
+
+    const progressSteps = ['member', 'category', 'penalty', 'amount'];
+    const currentStepIndex = progressSteps.indexOf(currentStep);
+
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden h-screen">
-        {/* Cancel button */}
-        <div className="absolute top-1 right-1 z-10">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate('/admin')}
-            className="bg-background/80 backdrop-blur-sm"
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        </div>
-        
-        {/* Compact title */}
-        <div className="py-1 text-center flex-shrink-0">
-          <h1 className="text-lg font-bold">Schütze auswählen</h1>
-        </div>
-        
-        {/* Member grid - uses nearly full viewport */}
-        <div className="flex-1 px-1 pb-1 min-h-0 overflow-hidden">
-          <div className="h-full w-full grid gap-1 member-grid-enter" 
-               style={{
-                 gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                 gridTemplateRows: `repeat(${Math.ceil(members.length / 3)}, minmax(0, 1fr))`
-               }}>
-            {members.map((member, index) => (
+      <div className="fixed inset-0 bg-background z-50 flex flex-col h-screen">
+        {/* Header with progress and navigation */}
+        <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground flex-shrink-0">
+          <div className="px-4 py-2">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {currentStep !== 'member' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBackStep}
+                    className="text-primary-foreground hover:bg-primary-foreground/10 p-2"
+                  >
+                    <ArrowLeft className="w-4 h-4" />
+                  </Button>
+                )}
+                <h1 className="text-lg font-bold">{stepTitle[currentStep]}</h1>
+              </div>
               <Button
-                key={member.id}
-                type="button"
-                variant="outline"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!isSelectionDisabled) {
-                    handleMemberSelect(member.id, e);
-                  }
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!isSelectionDisabled) {
-                    handleMemberSelect(member.id, e);
-                  }
-                }}
-                disabled={isSelectionDisabled}
-                className={`member-selection-button member-button-enter smooth-hover tap-animation h-full p-1 text-center transition-all duration-300 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden hover:shadow-lg hover:scale-105 ${
-                  isSelectionDisabled ? 'pointer-events-none opacity-50' : ''
-                }`}
-                style={{ 
-                  animationDelay: `${index * 50}ms` // Staggered animation
-                }}
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/admin')}
+                className="text-primary-foreground hover:bg-primary-foreground/10 p-2"
               >
-                <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-2">
-                  <div className="text-center font-bold text-sm leading-tight w-full whitespace-normal break-words hyphens-auto">
-                    <div className="transition-transform duration-200">{member.first_name}</div>
-                    <div className="transition-transform duration-200">{member.last_name}</div>
-                    {member.nickname && (
-                      <div className="text-xs opacity-70 mt-1 transition-opacity duration-200">
-                        "{member.nickname}"
-                      </div>
-                    )}
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+            
+            {/* Progress bar */}
+            <div className="flex gap-1 mt-2">
+              {progressSteps.map((step, index) => (
+                <div
+                  key={step}
+                  className={`h-1 flex-1 rounded-full transition-colors ${
+                    index <= currentStepIndex ? 'bg-primary-foreground' : 'bg-primary-foreground/30'
+                  }`}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Step content */}
+        <div className="flex-1 overflow-auto p-4">
+          {/* Member Selection */}
+          {currentStep === 'member' && (
+            <div className="grid gap-2 grid-cols-3 h-full content-start">
+              {members.map((member, index) => (
+                <Button
+                  key={member.id}
+                  type="button"
+                  variant="outline"
+                  onClick={(e) => handleMemberSelect(member.id, e)}
+                  disabled={isSelectionDisabled}
+                  className="h-20 p-2 flex flex-col justify-center text-center animate-fade-in"
+                  style={{ animationDelay: `${index * 50}ms` }}
+                >
+                  <div className="text-sm font-semibold leading-tight">
+                    {member.first_name}
+                  </div>
+                  <div className="text-sm font-semibold leading-tight">
+                    {member.last_name}
+                  </div>
+                  {member.nickname && (
+                    <div className="text-xs opacity-70 mt-1">
+                      "{member.nickname}"
+                    </div>
+                  )}
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* Category Selection */}
+          {currentStep === 'category' && (
+            <div className="grid gap-4 grid-cols-2">
+              {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([categoryKey, categoryName]) => {
+                const categoryPenaltyTypes = penaltyTypes.filter(pt => pt.category === categoryKey);
+                if (categoryPenaltyTypes.length === 0) return null;
+                
+                const categoryIcons: Record<string, string> = {
+                  timing: '⏰',
+                  soziales: '👥', 
+                  abnahme: '🎯',
+                  maschieren: '🚶',
+                  sonstiges: '📝'
+                };
+
+                return (
+                  <Button
+                    key={categoryKey}
+                    type="button"
+                    variant="outline"
+                    onClick={() => handleCategorySelect(categoryKey)}
+                    className="h-24 flex flex-col justify-center gap-2 animate-fade-in hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <div className="text-2xl">{categoryIcons[categoryKey]}</div>
+                    <div className="font-semibold">{categoryName}</div>
+                    <div className="text-xs opacity-70">{categoryPenaltyTypes.length} Strafen</div>
+                  </Button>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Penalty Selection */}
+          {currentStep === 'penalty' && selectedCategory && (
+            <div className="space-y-3">
+              {penaltyTypes
+                .filter(pt => pt.category === selectedCategory)
+                .map((penaltyType) => (
+                  <Button
+                    key={penaltyType.id}
+                    type="button"
+                    variant="outline"
+                    onClick={() => handlePenaltySelect(penaltyType.id)}
+                    className="w-full h-16 justify-between animate-fade-in hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold">{penaltyType.name}</div>
+                      {penaltyType.has_multiplier && (
+                        <div className="text-xs opacity-70">pro Einheit</div>
+                      )}
+                    </div>
+                    <div className="font-mono font-bold">{penaltyType.amount.toFixed(2)}€</div>
+                  </Button>
+                ))}
+            </div>
+          )}
+
+          {/* Amount/Multiplier */}
+          {currentStep === 'amount' && penaltyTypeId && (
+            <div className="space-y-6">
+              <div className="text-center">
+                <h3 className="font-semibold text-lg mb-2">
+                  {penaltyTypes.find(pt => pt.id === penaltyTypeId)?.name}
+                </h3>
+              </div>
+
+              {penaltyTypes.find(pt => pt.id === penaltyTypeId)?.has_multiplier ? (
+                <div className="space-y-4">
+                  <Label htmlFor="multiplier" className="text-center block">Anzahl eingeben</Label>
+                  <Input
+                    id="multiplier"
+                    type="number"
+                    value={multiplier}
+                    onChange={(e) => setMultiplier(Number(e.target.value) || 1)}
+                    className="h-16 text-2xl font-mono text-center"
+                    min="1"
+                  />
+                  <div className="text-center p-4 bg-primary/5 rounded-lg">
+                    <div className="text-sm text-muted-foreground mb-1">Gesamtbetrag:</div>
+                    <div className="text-2xl font-bold font-mono">
+                      {((penaltyTypes.find(pt => pt.id === penaltyTypeId)?.amount || 0) * multiplier).toFixed(2)}€
+                    </div>
                   </div>
                 </div>
+              ) : (
+                <div className="space-y-4">
+                  <Label htmlFor="amount" className="text-center block">Betrag anpassen</Label>
+                  <Input
+                    id="amount"
+                    type="number"
+                    value={amount}
+                    onChange={(e) => setAmount(Number(e.target.value))}
+                    className="h-16 text-2xl font-mono text-center"
+                    min="0"
+                    step="0.01"
+                  />
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <Label htmlFor="notes">Bemerkung (optional)</Label>
+                <Textarea
+                  id="notes"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  placeholder="Zusätzliche Notizen..."
+                  rows={3}
+                />
+              </div>
+
+              <Button
+                type="button"
+                onClick={handleSubmit}
+                className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
+              >
+                <Check className="w-5 h-5 mr-2" />
+                Strafe hinzufügen
               </Button>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     );
@@ -262,20 +452,28 @@ const AddPenalty = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                onClick={() => setShowMemberSelection(true)}
+                    onClick={() => {
+                      setMemberId('');
+                      if (isMobile) setCurrentStep('member');
+                    }}
                   >
                     Ändern
                   </Button>
                 </div>
               ) : (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-16 w-full text-left justify-center"
-                  onClick={() => setShowMemberSelection(true)}
-                >
-                  Schütze auswählen
-                </Button>
+                <Select value={memberId} onValueChange={setMemberId}>
+                  <SelectTrigger className="h-16 text-lg">
+                    <SelectValue placeholder="Schütze auswählen" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {members.map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.first_name} {member.last_name}
+                        {member.nickname && ` "${member.nickname}"`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               )}
             </div>
 
