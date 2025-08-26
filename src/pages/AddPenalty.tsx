@@ -24,10 +24,18 @@ const AddPenalty = () => {
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
+  const [allowHover, setAllowHover] = useState(false);
 
   useEffect(() => {
     loadMembers();
-  }, []);
+    
+    // Enable hover state after a short delay when overlay is shown
+    if (showMemberSelection) {
+      setAllowHover(false);
+      const timer = setTimeout(() => setAllowHover(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, [showMemberSelection]);
 
   const loadMembers = async () => {
     try {
@@ -148,8 +156,10 @@ const AddPenalty = () => {
                   }
                 }}
                 disabled={isSelectionDisabled}
-                className={`h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden ${
+                className={`h-full p-1 text-center transition-all duration-200 border-2 flex flex-col overflow-hidden ${
                   isSelectionDisabled ? 'pointer-events-none opacity-50' : ''
+                } ${
+                  allowHover ? 'hover:bg-primary hover:text-primary-foreground hover:border-primary' : ''
                 }`}
               >
                 <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-2">
@@ -218,7 +228,10 @@ const AddPenalty = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowMemberSelection(true)}
+                onClick={() => {
+                  setAllowHover(false);
+                  setShowMemberSelection(true);
+                }}
                   >
                     Ändern
                   </Button>
@@ -228,7 +241,10 @@ const AddPenalty = () => {
                   type="button"
                   variant="outline"
                   className="h-16 w-full text-left justify-center"
-                  onClick={() => setShowMemberSelection(true)}
+                  onClick={() => {
+                    setAllowHover(false);
+                    setShowMemberSelection(true);
+                  }}
                 >
                   Schütze auswählen
                 </Button>
