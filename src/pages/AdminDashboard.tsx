@@ -123,6 +123,50 @@ const AdminDashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Quick Actions */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Schnellaktionen</CardTitle>
+            <CardDescription>
+              Verwalten Sie Strafen mit wenigen Klicks
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => navigate('/add-penalty')}
+              className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
+            >
+              <PlusCircle className="w-6 h-6 mr-3" />
+              Neue Strafe hinzufügen
+            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin/members')}
+                className="h-12"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                Mitglieder verwalten
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/admin/penalty-catalog')}
+                className="h-12"
+              >
+                <Settings className="w-4 h-4 mr-2" />
+                Strafenkatalog verwalten
+              </Button>
+              <Button
+                variant="outline"
+                onClick={() => navigate('/dashboard')}
+                className="h-12"
+              >
+                Öffentliche Rangliste
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
@@ -170,50 +214,6 @@ const AdminDashboard = () => {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Schnellaktionen</CardTitle>
-            <CardDescription>
-              Verwalten Sie Strafen mit wenigen Klicks
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <Button
-              onClick={() => navigate('/add-penalty')}
-              className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
-            >
-              <PlusCircle className="w-6 h-6 mr-3" />
-              Neue Strafe hinzufügen
-            </Button>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Button
-                variant="outline"
-                onClick={() => navigate('/admin/members')}
-                className="h-12"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Mitglieder verwalten
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/admin/penalty-catalog')}
-                className="h-12"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Strafenkatalog verwalten
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/dashboard')}
-                className="h-12"
-              >
-                Öffentliche Rangliste
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
 
         {/* Penalty Management */}
         <Card>
