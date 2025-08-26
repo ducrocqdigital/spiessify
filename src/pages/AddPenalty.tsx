@@ -24,7 +24,6 @@ const AddPenalty = () => {
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
-  const [hasMouseMoved, setHasMouseMoved] = useState(false);
 
   useEffect(() => {
     loadMembers();
@@ -110,7 +109,7 @@ const AddPenalty = () => {
   // Full-screen member selection overlay
   if (showMemberSelection && !loading && members.length > 0) {
     return (
-      <div className={`fixed inset-0 bg-background z-50 flex flex-col overflow-hidden h-screen ${!hasMouseMoved ? 'no-hover' : ''}`}>
+      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden h-screen">
         {/* Cancel button */}
         <div className="absolute top-1 right-1 z-10">
           <Button
@@ -129,10 +128,7 @@ const AddPenalty = () => {
         </div>
         
         {/* Member grid - uses nearly full viewport */}
-        <div 
-          className="flex-1 px-1 pb-1 min-h-0 overflow-hidden"
-          onMouseMove={() => setHasMouseMoved(true)}
-        >
+        <div className="flex-1 px-1 pb-1 min-h-0 overflow-hidden">
           <div className="h-full w-full grid gap-1" 
                style={{
                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -143,7 +139,6 @@ const AddPenalty = () => {
                 key={member.id}
                 type="button"
                 variant="outline"
-                onClick={(e) => handleMemberSelect(member.id, e)}
                 onTouchEnd={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -152,7 +147,7 @@ const AddPenalty = () => {
                   }
                 }}
                 disabled={isSelectionDisabled}
-                className={`h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden ${
+                className={`member-selection-button h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden ${
                   isSelectionDisabled ? 'pointer-events-none opacity-50' : ''
                 }`}
               >
@@ -222,10 +217,7 @@ const AddPenalty = () => {
                     type="button"
                     variant="outline"
                     size="sm"
-                onClick={() => {
-                  setHasMouseMoved(false);
-                  setShowMemberSelection(true);
-                }}
+                onClick={() => setShowMemberSelection(true)}
                   >
                     Ändern
                   </Button>
@@ -235,10 +227,7 @@ const AddPenalty = () => {
                   type="button"
                   variant="outline"
                   className="h-16 w-full text-left justify-center"
-                  onClick={() => {
-                    setHasMouseMoved(false);
-                    setShowMemberSelection(true);
-                  }}
+                  onClick={() => setShowMemberSelection(true)}
                 >
                   Schütze auswählen
                 </Button>

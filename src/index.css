@@ -119,9 +119,11 @@ All colors MUST be HSL.
   }
 }
 
-/* Disable hover effects until mouse movement */
-.no-hover *:hover {
-  background-color: inherit !important;
-  color: inherit !important;
-  border-color: inherit !important;
+/* Mobile-first: Disable hover effects on touch devices */
+@media (hover: none) and (pointer: coarse) {
+  .member-selection-button:hover {
+    background-color: transparent !important;
+    color: inherit !important;
+    border-color: inherit !important;
+  }
 }
