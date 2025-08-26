@@ -24,18 +24,11 @@ const AddPenalty = () => {
   const [notes, setNotes] = useState('');
   const [showMemberSelection, setShowMemberSelection] = useState(true);
   const [isSelectionDisabled, setIsSelectionDisabled] = useState(false);
-  const [allowHover, setAllowHover] = useState(false);
+  const [hasMouseMoved, setHasMouseMoved] = useState(false);
 
   useEffect(() => {
     loadMembers();
-    
-    // Enable hover state after a short delay when overlay is shown
-    if (showMemberSelection) {
-      setAllowHover(false);
-      const timer = setTimeout(() => setAllowHover(true), 300);
-      return () => clearTimeout(timer);
-    }
-  }, [showMemberSelection]);
+  }, []);
 
   const loadMembers = async () => {
     try {
@@ -117,7 +110,7 @@ const AddPenalty = () => {
   // Full-screen member selection overlay
   if (showMemberSelection && !loading && members.length > 0) {
     return (
-      <div className="fixed inset-0 bg-background z-50 flex flex-col overflow-hidden h-screen">
+      <div className={`fixed inset-0 bg-background z-50 flex flex-col overflow-hidden h-screen ${!hasMouseMoved ? 'no-hover' : ''}`}>
         {/* Cancel button */}
         <div className="absolute top-1 right-1 z-10">
           <Button
@@ -136,7 +129,10 @@ const AddPenalty = () => {
         </div>
         
         {/* Member grid - uses nearly full viewport */}
-        <div className="flex-1 px-1 pb-1 min-h-0 overflow-hidden">
+        <div 
+          className="flex-1 px-1 pb-1 min-h-0 overflow-hidden"
+          onMouseMove={() => setHasMouseMoved(true)}
+        >
           <div className="h-full w-full grid gap-1" 
                style={{
                  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
@@ -156,10 +152,8 @@ const AddPenalty = () => {
                   }
                 }}
                 disabled={isSelectionDisabled}
-                className={`h-full p-1 text-center transition-all duration-200 border-2 flex flex-col overflow-hidden ${
+                className={`h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden ${
                   isSelectionDisabled ? 'pointer-events-none opacity-50' : ''
-                } ${
-                  allowHover ? 'hover:bg-primary hover:text-primary-foreground hover:border-primary' : ''
                 }`}
               >
                 <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-2">
@@ -229,7 +223,7 @@ const AddPenalty = () => {
                     variant="outline"
                     size="sm"
                 onClick={() => {
-                  setAllowHover(false);
+                  setHasMouseMoved(false);
                   setShowMemberSelection(true);
                 }}
                   >
@@ -242,7 +236,7 @@ const AddPenalty = () => {
                   variant="outline"
                   className="h-16 w-full text-left justify-center"
                   onClick={() => {
-                    setAllowHover(false);
+                    setHasMouseMoved(false);
                     setShowMemberSelection(true);
                   }}
                 >
