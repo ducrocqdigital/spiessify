@@ -8,11 +8,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { toast } from '@/hooks/use-toast';
 import { memberService } from '@/services/memberService';
 import { Member, MEMBER_RANKS, MemberRank } from '@/types';
-import { Plus, Edit2, ToggleLeft, ToggleRight, ArrowLeft } from 'lucide-react';
+import { Plus, Edit2, ToggleLeft, ToggleRight, ArrowLeft, Trash2, User } from 'lucide-react';
+import ProfilePhotoUpload from '@/components/ProfilePhotoUpload';
 
 const MemberManagement = () => {
   const navigate = useNavigate();
@@ -20,7 +21,9 @@ const MemberManagement = () => {
   const [loading, setLoading] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [editingMember, setEditingMember] = useState<Member | null>(null);
+  const [deletingMember, setDeletingMember] = useState<Member | null>(null);
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -139,6 +142,32 @@ const MemberManagement = () => {
     }
   };
 
+  const handleDeleteMember = async () => {
+    if (!deletingMember) return;
+    
+    try {
+      await memberService.delete(deletingMember.id);
+      toast({
+        title: "Erfolg",
+        description: `${deletingMember.first_name} ${deletingMember.last_name} wurde gelöscht.`,
+      });
+      setIsDeleteDialogOpen(false);
+      setDeletingMember(null);
+      loadMembers();
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Mitglied konnte nicht gelöscht werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openDeleteDialog = (member: Member) => {
+    setDeletingMember(member);
+    setIsDeleteDialogOpen(true);
+  };
+
   const openEditDialog = (member: Member) => {
     setEditingMember(member);
     setFormData({
@@ -153,6 +182,14 @@ const MemberManagement = () => {
       is_active: member.is_active
     });
     setIsEditDialogOpen(true);
+  };
+
+  const handlePhotoUpdated = (memberId: string, photoUrl: string) => {
+    setMembers(prev => prev.map(member => 
+      member.id === memberId 
+        ? { ...member, profile_photo: photoUrl }
+        : member
+    ));
   };
 
   if (loading) {
@@ -281,18 +318,34 @@ const MemberManagement = () => {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Profilbild</TableHead>
                 <TableHead>Name</TableHead>
                 <TableHead>Rang</TableHead>
                 <TableHead>E-Mail</TableHead>
                 <TableHead>Telefon</TableHead>
                 <TableHead>Beitrittsjahr</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Aktionen</TableHead>
+                <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {members.map((member) => (
                 <TableRow key={member.id}>
+                  <TableCell>
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-12 w-12">
+                        <AvatarImage src={member.profile_photo} alt={`${member.first_name} ${member.last_name}`} />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          <User className="h-6 w-6" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <ProfilePhotoUpload
+                        memberId={member.id}
+                        currentPhotoUrl={member.profile_photo}
+                        onPhotoUpdated={(photoUrl) => handlePhotoUpdated(member.id, photoUrl)}
+                      />
+                    </div>
+                  </TableCell>
                   <TableCell>
                     <div>
                       <div className="font-medium">
@@ -318,12 +371,13 @@ const MemberManagement = () => {
                       {member.is_active ? "Aktiv" : "Inaktiv"}
                     </Badge>
                   </TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
+                  <TableCell className="text-right">
+                    <div className="flex gap-2 justify-end">
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => openEditDialog(member)}
+                        className="hover:bg-primary/10"
                       >
                         <Edit2 className="h-4 w-4" />
                       </Button>
@@ -331,12 +385,21 @@ const MemberManagement = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => handleToggleActive(member)}
+                        className={member.is_active ? "hover:bg-warning/10" : "hover:bg-success/10"}
                       >
                         {member.is_active ? (
-                          <ToggleRight className="h-4 w-4" />
+                          <ToggleRight className="h-4 w-4 text-warning" />
                         ) : (
-                          <ToggleLeft className="h-4 w-4" />
+                          <ToggleLeft className="h-4 w-4 text-muted-foreground" />
                         )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openDeleteDialog(member)}
+                        className="hover:bg-destructive/10 hover:border-destructive/20"
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>
                   </TableCell>
@@ -435,6 +498,28 @@ const MemberManagement = () => {
             </Button>
             <Button onClick={handleEditMember} disabled={!formData.first_name || !formData.last_name}>
               Speichern
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Mitglied löschen</DialogTitle>
+            <DialogDescription>
+              Sind Sie sicher, dass Sie <strong>{deletingMember?.first_name} {deletingMember?.last_name}</strong> dauerhaft löschen möchten? 
+              Diese Aktion kann nicht rückgängig gemacht werden.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteMember}>
+              <Trash2 className="h-4 w-4 mr-2" />
+              Endgültig löschen
             </Button>
           </DialogFooter>
         </DialogContent>
