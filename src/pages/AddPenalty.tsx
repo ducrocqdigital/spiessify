@@ -139,11 +139,18 @@ const AddPenalty = () => {
                 key={member.id}
                 type="button"
                 variant="outline"
-                className="h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden"
                 onClick={(e) => handleMemberSelect(member.id, e)}
-                onTouchStart={(e) => e.preventDefault()}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (!isSelectionDisabled) {
+                    handleMemberSelect(member.id, e);
+                  }
+                }}
                 disabled={isSelectionDisabled}
-                style={{ pointerEvents: isSelectionDisabled ? 'none' : 'auto' }}
+                className={`h-full p-1 text-center transition-all duration-200 hover:bg-primary hover:text-primary-foreground border-2 hover:border-primary flex flex-col overflow-hidden ${
+                  isSelectionDisabled ? 'pointer-events-none opacity-50' : ''
+                }`}
               >
                 <div className="flex flex-col w-full h-full justify-center items-center min-h-0 p-2">
                   <div className="text-center font-bold text-sm leading-tight w-full whitespace-normal break-words hyphens-auto">
