@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, Crown } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { Penalty, PENALTY_CATEGORIES } from '@/types';
@@ -83,7 +83,7 @@ const AdminDashboard = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
-              <Crown className="w-8 h-8 mx-auto text-warning mb-2" />
+              <ThumbsDown className="w-8 h-8 mx-auto text-orange-500 mb-2" />
               {loading ? (
                 <>
                   <div className="text-2xl font-bold">...</div>
@@ -91,7 +91,7 @@ const AdminDashboard = () => {
                 </>
               ) : zugsau ? (
                 <>
-                  <div className="text-2xl font-bold text-warning">
+                  <div className="text-2xl font-bold text-black">
                     {memberService.getDisplayName(zugsau.member)}
                   </div>
                   <div className="text-sm text-muted-foreground">Zugsau ({zugsau.totalAmount}€)</div>
