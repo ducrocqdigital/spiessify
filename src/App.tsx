@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import MemberManagement from "./pages/MemberManagement";
+import PenaltyManagement from "./pages/PenaltyManagement";
 import AddPenalty from "./pages/AddPenalty";
 import PublicDashboard from "./pages/PublicDashboard";
 import NotFound from "./pages/NotFound";
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/members" element={<MemberManagement />} />
+          <Route path="/admin/penalties" element={<PenaltyManagement />} />
           <Route path="/add-penalty" element={<AddPenalty />} />
           <Route path="/dashboard" element={<PublicDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

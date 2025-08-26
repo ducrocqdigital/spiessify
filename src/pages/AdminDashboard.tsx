@@ -154,17 +154,18 @@ const AdminDashboard = () => {
               </Button>
               <Button
                 variant="outline"
+                onClick={() => navigate('/admin/penalties')}
+                className="h-12"
+              >
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Strafen verwalten
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => navigate('/dashboard')}
                 className="h-12"
               >
                 Öffentliche Rangliste
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/dashboard?filter=today')}
-                className="h-12"
-              >
-                Heutige Strafen
               </Button>
             </div>
           </CardContent>
