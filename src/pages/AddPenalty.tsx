@@ -44,12 +44,6 @@ const AddPenalty = () => {
     if (document.activeElement instanceof HTMLElement) {
       document.activeElement.blur();
     }
-    
-    // Clear any hover states by temporarily disabling pointer events
-    document.body.style.pointerEvents = 'none';
-    setTimeout(() => {
-      document.body.style.pointerEvents = 'auto';
-    }, 100);
   };
 
   useEffect(() => {
