@@ -40,19 +40,19 @@ export const LateArrivalModal = ({
           if (latePenalty) {
             // Calculate penalty based on minutes and multiplier if applicable
             const baseAmount = Number(latePenalty.amount);
-            const amount = latePenalty.has_multiplier ? baseAmount * Math.ceil(minutesLate / 5) : baseAmount;
+            const amount = latePenalty.has_multiplier ? baseAmount * minutesLate : baseAmount;
             setPenaltyAmount(amount);
             setCustomAmount(amount.toString());
           } else {
-            // Default fallback
-            const defaultAmount = Math.ceil(minutesLate / 5) * 1; // 1€ per 5 minutes
+            // Default fallback - 1€ per minute late
+            const defaultAmount = minutesLate * 1;
             setPenaltyAmount(defaultAmount);
             setCustomAmount(defaultAmount.toString());
           }
         } catch (error) {
           console.error('Failed to load penalty types:', error);
-          // Fallback calculation
-          const defaultAmount = Math.ceil(minutesLate / 5) * 1;
+          // Fallback calculation - 1€ per minute late
+          const defaultAmount = minutesLate * 1;
           setPenaltyAmount(defaultAmount);
           setCustomAmount(defaultAmount.toString());
         }

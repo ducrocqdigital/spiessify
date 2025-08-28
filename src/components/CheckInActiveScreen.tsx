@@ -5,7 +5,10 @@ import { Badge } from '@/components/ui/badge';
 import { CheckInEndModal } from './CheckInEndModal';
 import { LateArrivalModal } from './LateArrivalModal';
 import { memberService } from '@/services/memberService';
+import { penaltyService } from '@/services/penaltyService';
+import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { Member } from '@/types';
+import { toast } from 'sonner';
 
 interface CheckedMember {
   memberId: string;
@@ -90,16 +93,46 @@ export const CheckInActiveScreen = ({ referenceTime, onEnd }: CheckInActiveScree
     }
   };
 
-  const handleLateArrival = (penaltyAmount: number) => {
+  const handleLateArrival = async (penaltyAmount: number) => {
     if (!selectedMember) return;
 
-    const checkTime = new Date();
-    setCheckedMembers(prev => [...prev, {
-      memberId: selectedMember.id,
-      checkTime,
-      minutesLate: lateMinutes,
-      isOnTime: false
-    }]);
+    try {
+      // Find the late arrival penalty type from catalog
+      const penaltyTypes = await penaltyCatalogService.getActive();
+      const latePenalty = penaltyTypes.find(
+        pt => pt.name.toLowerCase().includes('verspätung') || 
+              pt.category === 'timing' ||
+              pt.name.toLowerCase().includes('zu spät')
+      );
+
+      // Create penalty record in database
+      if (latePenalty) {
+        await penaltyService.create({
+          member_id: selectedMember.id,
+          penalty_type_id: latePenalty.id,
+          amount: penaltyAmount,
+          notes: `Check-in Verspätung: +${lateMinutes} Minuten`
+        });
+      } else {
+        // If no penalty type found, we still need to create a record
+        // This shouldn't happen in normal operation, but we handle it gracefully
+        console.warn('No late arrival penalty type found in catalog');
+        toast.error('Keine Verspätungs-Strafe im Katalog gefunden');
+      }
+
+      const checkTime = new Date();
+      setCheckedMembers(prev => [...prev, {
+        memberId: selectedMember.id,
+        checkTime,
+        minutesLate: lateMinutes,
+        isOnTime: false
+      }]);
+
+      toast.success(`Verspätung für ${memberService.getDisplayName(selectedMember)} erfasst`);
+    } catch (error) {
+      console.error('Failed to save penalty:', error);
+      toast.error('Fehler beim Speichern der Strafe');
+    }
 
     setShowLateModal(false);
     setSelectedMember(null);
