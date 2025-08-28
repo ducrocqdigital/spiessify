@@ -38,8 +38,7 @@ const AdminDashboard = () => {
   const [filters, setFilters] = useState({
     memberId: '',
     category: 'all',
-    dateFrom: '',
-    dateTo: ''
+    date: ''
   });
   
   const { toast } = useToast();
@@ -94,8 +93,8 @@ const AdminDashboard = () => {
         offset,
         memberId: filters.memberId || undefined,
         categoryFilter: filters.category === "all" ? undefined : filters.category,
-        dateFrom: filters.dateFrom || undefined,
-        dateTo: filters.dateTo || undefined
+        dateFrom: filters.date || undefined,
+        dateTo: filters.date || undefined
       });
       
       if (reset) {
@@ -128,8 +127,7 @@ const AdminDashboard = () => {
     setFilters({
       memberId: '',
       category: 'all',
-      dateFrom: '',
-      dateTo: ''
+      date: ''
     });
     setTimeout(() => loadFilteredPenalties(true), 0);
   };
@@ -304,107 +302,98 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Filter className="h-5 w-5" />
-              Filter & Einstellungen
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
-              <div>
-                <Label htmlFor="pageSize">Einträge pro Seite</Label>
-                <Select value={pageSize.toString()} onValueChange={(value) => {
-                  setPageSize(parseInt(value));
-                  setTimeout(() => loadFilteredPenalties(true), 0);
-                }}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="5">5</SelectItem>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="40">40</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="memberFilter">Mitglied</Label>
-                <Select value={filters.memberId || "all"} onValueChange={(value) => handleFilterChange('memberId', value === "all" ? "" : value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Mitglieder" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Mitglieder</SelectItem>
-                    {members
-                      .filter(member => member.is_active)
-                      .map((member) => (
-                        <SelectItem key={member.id} value={member.id}>
-                          {memberService.getDisplayName(member)}
-                        </SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="categoryFilter">Kategorie</Label>
-                <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Alle Kategorien" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Alle Kategorien</SelectItem>
-                    {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([key, name]) => (
-                      <SelectItem key={key} value={key}>{name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="dateFrom">Von Datum</Label>
-                <Input
-                  id="dateFrom"
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
-                />
-              </div>
-              
-              <div>
-                <Label htmlFor="dateTo">Bis Datum</Label>
-                <Input
-                  id="dateTo"
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => handleFilterChange('dateTo', e.target.value)}
-                />
-              </div>
-              
-              <div className="flex items-end gap-2">
-                <Button onClick={applyFilters} className="flex-1">
-                  Anwenden
-                </Button>
-                <Button variant="outline" onClick={clearFilters}>
-                  Zurücksetzen
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
         {/* Penalty Management */}
         <Card>
           <CardHeader>
-            <CardTitle>Strafenverwaltung ({allPenalties.length} gesamt, {penalties.length} angezeigt)</CardTitle>
-            <CardDescription>
-              Alle Strafen mit Bearbeitungs- und Löschfunktionen
-            </CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Strafenverwaltung ({allPenalties.length} gesamt, {penalties.length} angezeigt)</CardTitle>
+                <CardDescription>
+                  Alle Strafen mit Bearbeitungs- und Löschfunktionen
+                </CardDescription>
+              </div>
+            </div>
+            
+            {/* Compact Filters */}
+            <div className="border-t pt-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+                <div>
+                  <Label htmlFor="pageSize" className="text-xs">Einträge</Label>
+                  <Select value={pageSize.toString()} onValueChange={(value) => {
+                    setPageSize(parseInt(value));
+                    setTimeout(() => loadFilteredPenalties(true), 0);
+                  }}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="40">40</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="memberFilter" className="text-xs">Mitglied</Label>
+                  <Select value={filters.memberId || "all"} onValueChange={(value) => handleFilterChange('memberId', value === "all" ? "" : value)}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Alle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle Mitglieder</SelectItem>
+                      {members
+                        .filter(member => member.is_active)
+                        .map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {memberService.getDisplayName(member)}
+                          </SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="categoryFilter" className="text-xs">Kategorie</Label>
+                  <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+                    <SelectTrigger className="h-8">
+                      <SelectValue placeholder="Alle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Alle Kategorien</SelectItem>
+                      {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([key, name]) => (
+                        <SelectItem key={key} value={key}>{name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div>
+                  <Label htmlFor="date" className="text-xs">Datum</Label>
+                  <Input
+                    id="date"
+                    type="date"
+                    className="h-8"
+                    value={filters.date}
+                    onChange={(e) => handleFilterChange('date', e.target.value)}
+                  />
+                </div>
+                
+                <div className="flex gap-1">
+                  <Button onClick={applyFilters} size="sm" className="h-8 flex-1">
+                    <Filter className="w-3 h-3 mr-1" />
+                    Anwenden
+                  </Button>
+                </div>
+                
+                <div>
+                  <Button variant="outline" onClick={clearFilters} size="sm" className="h-8 w-full">
+                    Zurücksetzen
+                  </Button>
+                </div>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {loading ? (
