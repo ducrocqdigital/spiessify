@@ -38,6 +38,20 @@ const AddPenalty = () => {
   const [location, setLocation] = useState<{latitude: number, longitude: number} | null>(null);
   const [locationStatus, setLocationStatus] = useState<'loading' | 'success' | 'error' | 'none'>('none');
 
+  // Helper function to clear any lingering hover states
+  const clearHoverStates = () => {
+    // Force blur on any focused elements
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
+    
+    // Clear any hover states by temporarily disabling pointer events
+    document.body.style.pointerEvents = 'none';
+    setTimeout(() => {
+      document.body.style.pointerEvents = 'auto';
+    }, 100);
+  };
+
   useEffect(() => {
     loadData();
     
@@ -107,8 +121,13 @@ const AddPenalty = () => {
     setIsSelectionDisabled(true);
     setMemberId(id);
     
+    // Clear hover states when navigating
+    clearHoverStates();
+    
     if (isMobile) {
-      setCurrentStep('category');
+      setTimeout(() => {
+        setCurrentStep('category');
+      }, 150); // Small delay to ensure hover state is cleared
     }
     
     setTimeout(() => {
@@ -119,7 +138,10 @@ const AddPenalty = () => {
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category);
     setPenaltyTypeId('');
-    setCurrentStep('penalty');
+    clearHoverStates();
+    setTimeout(() => {
+      setCurrentStep('penalty');
+    }, 100);
   };
 
   const handlePenaltySelect = (penaltyId: string) => {
@@ -127,10 +149,14 @@ const AddPenalty = () => {
     setPenaltyTypeId(penaltyId);
     setAmount(penaltyType?.amount || 0);
     setMultiplier(1);
-    setCurrentStep('amount');
+    clearHoverStates();
+    setTimeout(() => {
+      setCurrentStep('amount');
+    }, 100);
   };
 
   const handleBackStep = () => {
+    clearHoverStates();
     switch (currentStep) {
       case 'category':
         setCurrentStep('member');
@@ -220,7 +246,7 @@ const AddPenalty = () => {
                     variant="ghost"
                     size="sm"
                     onClick={handleBackStep}
-                    className="text-primary-foreground hover:bg-primary-foreground/10 p-2"
+                    className="text-primary-foreground hover:bg-primary-foreground/10 p-2 touch-button"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
@@ -230,8 +256,11 @@ const AddPenalty = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => navigate('/admin')}
-                className="text-primary-foreground hover:bg-primary-foreground/10 p-3"
+                onClick={() => {
+                  clearHoverStates();
+                  navigate('/admin');
+                }}
+                className="text-primary-foreground hover:bg-primary-foreground/10 p-3 touch-button"
               >
                 <X className="w-6 h-6" />
               </Button>
@@ -263,8 +292,12 @@ const AddPenalty = () => {
                   type="button"
                   variant="outline"
                   onClick={(e) => handleMemberSelect(member.id, e)}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.blur();
+                    clearHoverStates();
+                  }}
                   disabled={isSelectionDisabled}
-                  className="h-auto min-h-20 py-3 px-2 flex flex-col justify-center text-center animate-fade-in whitespace-normal"
+                  className="h-auto min-h-20 py-3 px-2 flex flex-col justify-center text-center animate-fade-in whitespace-normal touch-button"
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <div className="text-sm font-semibold leading-tight break-words">
@@ -301,7 +334,11 @@ const AddPenalty = () => {
                     type="button"
                     variant="outline"
                     onClick={() => handleCategorySelect(categoryKey)}
-                    className="h-24 flex flex-col justify-center gap-2 animate-fade-in hover:bg-primary hover:text-primary-foreground"
+                    onTouchEnd={(e) => {
+                      e.currentTarget.blur();
+                      clearHoverStates();
+                    }}
+                    className="h-24 flex flex-col justify-center gap-2 animate-fade-in hover:bg-primary hover:text-primary-foreground touch-button"
                   >
                     <div className="text-2xl">{categoryIcons[categoryKey]}</div>
                     <div className="font-semibold">{categoryName}</div>
@@ -323,7 +360,11 @@ const AddPenalty = () => {
                     type="button"
                     variant="outline"
                     onClick={() => handlePenaltySelect(penaltyType.id)}
-                    className="w-full h-16 justify-between animate-fade-in hover:bg-primary hover:text-primary-foreground"
+                    onTouchEnd={(e) => {
+                      e.currentTarget.blur();
+                      clearHoverStates();
+                    }}
+                    className="w-full h-16 justify-between animate-fade-in hover:bg-primary hover:text-primary-foreground touch-button"
                   >
                     <div className="text-left">
                       <div className="font-semibold">{penaltyType.name}</div>
@@ -393,7 +434,7 @@ const AddPenalty = () => {
               <Button
                 type="button"
                 onClick={handleSubmit}
-                className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
+                className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow touch-button"
               >
                 <Check className="w-5 h-5 mr-2" />
                 Strafe hinzufügen

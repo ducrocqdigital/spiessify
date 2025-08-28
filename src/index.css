@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -117,6 +118,32 @@ All colors MUST be HSL.
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Remove all hover states on touch devices */
+  @media (hover: none) {
+    * {
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    button:hover,
+    .hover\:bg-primary:hover,
+    .hover\:text-primary-foreground:hover,
+    .hover\:bg-primary\/5:hover,
+    .hover\:scale-102:hover,
+    .hover\:shadow-md:hover,
+    .hover\:bg-accent:hover,
+    .hover\:text-accent-foreground:hover,
+    .hover\:bg-primary-foreground\/10:hover,
+    .hover\:bg-primary-foreground\/20:hover,
+    .hover\:bg-green-600:hover,
+    .smooth-hover:hover {
+      background-color: inherit !important;
+      color: inherit !important;
+      transform: none !important;
+      box-shadow: inherit !important;
+      border-color: inherit !important;
+    }
+  }
 }
 
 /* Smooth transitions and animations */
@@ -141,13 +168,27 @@ All colors MUST be HSL.
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .smooth-hover:hover {
-    transform: translateY(-1px) scale(1.02);
+  /* Only apply hover effects on devices that support hover */
+  @media (hover: hover) {
+    .smooth-hover:hover {
+      transform: translateY(-1px) scale(1.02);
+    }
   }
   
   .tap-animation:active {
     transform: scale(0.95);
     transition: transform 0.1s ease-out;
+  }
+
+  /* Touch-specific styles */
+  .touch-button {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  
+  .touch-button:active {
+    background-color: hsl(var(--primary) / 0.1);
+    transform: scale(0.98);
   }
 }
 
@@ -192,18 +233,5 @@ All colors MUST be HSL.
   to {
     opacity: 1;
     transform: translateX(0);
-  }
-}
-
-/* Mobile-first: Disable hover effects on touch devices */
-@media (hover: none) and (pointer: coarse) {
-  .member-selection-button:hover {
-    background-color: transparent !important;
-    color: inherit !important;
-    border-color: inherit !important;
-  }
-  
-  .smooth-hover:hover {
-    transform: none;
   }
 }
