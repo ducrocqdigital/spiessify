@@ -14,6 +14,81 @@ export type Database = {
   }
   public: {
     Tables: {
+      inspection_results: {
+        Row: {
+          created_at: string
+          id: string
+          inspection_data: Json | null
+          member_id: string
+          session_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inspection_data?: Json | null
+          member_id: string
+          session_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inspection_data?: Json | null
+          member_id?: string
+          session_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inspection_results_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inspection_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "inspection_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inspection_sessions: {
+        Row: {
+          anlass: string
+          created_at: string
+          end_time: string | null
+          id: string
+          is_active: boolean
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          anlass: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          anlass?: string
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       members: {
         Row: {
           birth_date: string | null
