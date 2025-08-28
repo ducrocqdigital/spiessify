@@ -88,6 +88,15 @@ const AdminDashboard = () => {
     
     try {
       const offset = reset ? 0 : penalties.length;
+      console.log('Loading filtered penalties:', {
+        limit: pageSize,
+        offset,
+        memberId: filters.memberId || undefined,
+        categoryFilter: filters.category === "all" ? undefined : filters.category,
+        dateFrom: filters.date || undefined,
+        dateTo: filters.date || undefined
+      });
+      
       const filteredData = await penaltyService.getFiltered({
         limit: pageSize,
         offset,
@@ -96,6 +105,8 @@ const AdminDashboard = () => {
         dateFrom: filters.date || undefined,
         dateTo: filters.date || undefined
       });
+      
+      console.log('Filtered data received:', filteredData.length, 'items');
       
       if (reset) {
         setPenalties(filteredData);
@@ -116,8 +127,10 @@ const AdminDashboard = () => {
   };
 
   const handleFilterChange = (key: string, value: string) => {
+    console.log('Filter change:', key, value);
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
+    console.log('New filters:', newFilters);
     setTimeout(() => loadFilteredPenalties(true), 0);
   };
 

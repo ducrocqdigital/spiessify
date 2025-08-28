@@ -38,6 +38,7 @@ export const penaltyService = {
       .order('created_time', { ascending: false });
 
     if (memberId) {
+      console.log('Filtering by member ID:', memberId);
       query = query.eq('member_id', memberId);
     }
 
