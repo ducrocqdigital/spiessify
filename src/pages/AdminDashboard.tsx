@@ -2,13 +2,14 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Settings } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Settings, Minus } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { Penalty } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import PenaltyTable from '@/components/PenaltyTable';
+import { AddCreditDialog } from '@/components/AddCreditDialog';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const AdminDashboard = () => {
   const [members, setMembers] = useState<any[]>([]);
   const [penaltyTypes, setPenaltyTypes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -132,13 +134,23 @@ const AdminDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <Button
-              onClick={() => navigate('/add-penalty')}
-              className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
-            >
-              <PlusCircle className="w-6 h-6 mr-3" />
-              Neue Strafe hinzufügen
-            </Button>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Button
+                onClick={() => navigate('/add-penalty')}
+                className="h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
+              >
+                <PlusCircle className="w-6 h-6 mr-3" />
+                Neue Strafe hinzufügen
+              </Button>
+              <Button
+                onClick={() => setCreditDialogOpen(true)}
+                variant="outline"
+                className="h-16 text-lg border-2 border-green-500 text-green-600 hover:bg-green-50"
+              >
+                <Minus className="w-6 h-6 mr-3" />
+                Gutschrift hinzufügen
+              </Button>
+            </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 variant="outline"
@@ -238,6 +250,15 @@ const AdminDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Add Credit Dialog */}
+      <AddCreditDialog
+        open={creditDialogOpen}
+        onOpenChange={setCreditDialogOpen}
+        members={members}
+        penaltyTypes={penaltyTypes}
+        onCreditAdded={loadDashboardData}
+      />
     </div>
   );
 };
