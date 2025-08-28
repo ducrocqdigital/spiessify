@@ -33,8 +33,8 @@ export const penaltyService = {
     return (data || []) as Penalty[];
   },
 
-  // Get recent penalties (last 5)
-  async getRecent(limit: number = 5): Promise<Penalty[]> {
+  // Get recent penalties with pagination
+  async getRecent(limit: number = 10, offset: number = 0): Promise<Penalty[]> {
     const { data, error } = await supabase
       .from('penalties')
       .select(`
@@ -43,7 +43,7 @@ export const penaltyService = {
         penalty_type:penalty_catalog(*)
       `)
       .order('created_time', { ascending: false })
-      .limit(limit);
+      .range(offset, offset + limit - 1);
     
     if (error) throw error;
     return (data || []) as Penalty[];

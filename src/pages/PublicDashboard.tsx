@@ -7,6 +7,7 @@ import { Trophy, Medal, Award, Filter, Users, Euro, Calendar } from 'lucide-reac
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
 import { Member, Penalty } from '@/types';
+import { formatDateTime } from '@/utils/dateUtils';
 
 type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
 
@@ -14,7 +15,10 @@ const PublicDashboard = () => {
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [members, setMembers] = useState<Member[]>([]);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
+  const [recentPenalties, setRecentPenalties] = useState<Penalty[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -22,17 +26,35 @@ const PublicDashboard = () => {
 
   const loadData = async () => {
     try {
-      const [membersData, penaltiesData] = await Promise.all([
+      const [membersData, penaltiesData, recentPenaltiesData] = await Promise.all([
         memberService.getMembersWithStats(),
-        penaltyService.getAll()
+        penaltyService.getAll(),
+        penaltyService.getRecent(10, 0)
       ]);
       
       setMembers(membersData);
       setPenalties(penaltiesData);
+      setRecentPenalties(recentPenaltiesData);
+      setHasMore(recentPenaltiesData.length === 10);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadMorePenalties = async () => {
+    if (loadingMore || !hasMore) return;
+    
+    setLoadingMore(true);
+    try {
+      const morePenalties = await penaltyService.getRecent(10, recentPenalties.length);
+      setRecentPenalties(prev => [...prev, ...morePenalties]);
+      setHasMore(morePenalties.length === 10);
+    } catch (error) {
+      console.error('Failed to load more penalties:', error);
+    } finally {
+      setLoadingMore(false);
     }
   };
 
@@ -174,32 +196,45 @@ const PublicDashboard = () => {
             <div className="space-y-3">
               {loading ? (
                 <div className="text-center text-muted-foreground py-8">Laden...</div>
-              ) : penalties.length === 0 ? (
+              ) : recentPenalties.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">Keine Strafen vorhanden</div>
               ) : (
-                penalties.slice(0, 10).map((penalty) => (
-                  <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <div className="font-medium">
-                        {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Badge variant="outline" className="text-xs">
-                          {penalty.penalty_type?.name || 'Unbekannt'}
-                        </Badge>
-                        <span>{penalty.date}</span>
-                      </div>
-                      {penalty.notes && (
-                        <div className="text-xs text-muted-foreground mt-1">
-                          {penalty.notes}
+                <>
+                  {recentPenalties.map((penalty) => (
+                    <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <div className="font-medium">
+                          {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
                         </div>
-                      )}
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Badge variant="outline" className="text-xs">
+                            {penalty.penalty_type?.name || 'Unbekannt'}
+                          </Badge>
+                          <span>{formatDateTime(penalty.created_time || penalty.date)}</span>
+                        </div>
+                        {penalty.notes && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            {penalty.notes}
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-lg font-bold text-primary">
+                        {penalty.amount}€
+                      </div>
                     </div>
-                    <div className="text-lg font-bold text-primary">
-                      {penalty.amount}€
+                  ))}
+                  {hasMore && (
+                    <div className="text-center pt-4">
+                      <Button 
+                        variant="outline" 
+                        onClick={loadMorePenalties}
+                        disabled={loadingMore}
+                      >
+                        {loadingMore ? 'Lädt...' : '10 weitere laden'}
+                      </Button>
                     </div>
-                  </div>
-                ))
+                  )}
+                </>
               )}
             </div>
           </CardContent>
