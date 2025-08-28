@@ -184,11 +184,47 @@ All colors MUST be HSL.
   .touch-button {
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
+  /* Active state for better touch feedback */
   .touch-button:active {
-    background-color: hsl(var(--primary) / 0.1);
-    transform: scale(0.98);
+    transform: scale(0.96);
+    transition: transform 0.1s ease-out;
+  }
+  
+  /* Enhanced feedback for different button variants */
+  .touch-button[data-variant="outline"]:active {
+    background-color: hsl(var(--primary) / 0.08);
+    border-color: hsl(var(--primary) / 0.5);
+  }
+  
+  .touch-button[data-variant="default"]:active,
+  .touch-button.bg-gradient-to-r:active {
+    background: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--primary-glow) / 0.9));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+  }
+  
+  /* Ripple effect */
+  .touch-button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: hsl(var(--primary-foreground) / 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease;
+    pointer-events: none;
+  }
+  
+  .touch-button:active::after {
+    width: 100px;
+    height: 100px;
   }
 }
 

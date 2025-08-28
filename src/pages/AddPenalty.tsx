@@ -293,6 +293,7 @@ const AddPenalty = () => {
                   disabled={isSelectionDisabled}
                   className="h-auto min-h-20 py-3 px-2 flex flex-col justify-center text-center animate-fade-in whitespace-normal touch-button"
                   style={{ animationDelay: `${index * 50}ms` }}
+                  data-variant="outline"
                 >
                   <div className="text-sm font-semibold leading-tight break-words">
                     {member.first_name} {member.last_name}
@@ -333,6 +334,7 @@ const AddPenalty = () => {
                       clearHoverStates();
                     }}
                     className="h-24 flex flex-col justify-center gap-2 animate-fade-in hover:bg-primary hover:text-primary-foreground touch-button"
+                    data-variant="outline"
                   >
                     <div className="text-2xl">{categoryIcons[categoryKey]}</div>
                     <div className="font-semibold">{categoryName}</div>
@@ -349,17 +351,18 @@ const AddPenalty = () => {
               {penaltyTypes
                 .filter(pt => pt.category === selectedCategory)
                 .map((penaltyType) => (
-                  <Button
-                    key={penaltyType.id}
-                    type="button"
-                    variant="outline"
-                    onClick={() => handlePenaltySelect(penaltyType.id)}
-                    onTouchEnd={(e) => {
-                      e.currentTarget.blur();
-                      clearHoverStates();
-                    }}
-                    className="w-full h-16 justify-between animate-fade-in hover:bg-primary hover:text-primary-foreground touch-button"
-                  >
+                    <Button
+                      key={penaltyType.id}
+                      type="button"
+                      variant="outline"
+                      onClick={() => handlePenaltySelect(penaltyType.id)}
+                      onTouchEnd={(e) => {
+                        e.currentTarget.blur();
+                        clearHoverStates();
+                      }}
+                      className="w-full h-16 justify-between animate-fade-in hover:bg-primary hover:text-primary-foreground touch-button"
+                      data-variant="outline"
+                    >
                     <div className="text-left">
                       <div className="font-semibold">{penaltyType.name}</div>
                       {penaltyType.has_multiplier && (
