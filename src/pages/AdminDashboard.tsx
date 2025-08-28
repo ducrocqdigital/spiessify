@@ -17,6 +17,10 @@ import PenaltyTable from '@/components/PenaltyTable';
 import { AddCreditDialog } from '@/components/AddCreditDialog';
 import { CheckInStartModal } from '@/components/CheckInStartModal';
 import { CheckInActiveScreen } from '@/components/CheckInActiveScreen';
+import { InspectionStartModal } from '@/components/InspectionStartModal';
+import { InspectionActiveScreen } from '@/components/InspectionActiveScreen';
+import { inspectionService } from '@/services/inspectionService';
+import { InspectionSession } from '@/types';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -44,6 +48,11 @@ const AdminDashboard = () => {
   const [checkInStartModalOpen, setCheckInStartModalOpen] = useState(false);
   const [checkInReferenceTime, setCheckInReferenceTime] = useState('');
   const [checkInOccasion, setCheckInOccasion] = useState('');
+  
+  // Inspection state
+  const [inspectionActive, setInspectionActive] = useState(false);
+  const [inspectionStartModalOpen, setInspectionStartModalOpen] = useState(false);
+  const [activeInspectionSession, setActiveInspectionSession] = useState<InspectionSession | null>(null);
   
   // Filters
   const [filters, setFilters] = useState({
@@ -82,6 +91,14 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
+      // Check for active inspection session first
+      const activeSession = await inspectionService.getActiveSession();
+      if (activeSession) {
+        setInspectionActive(true);
+        setActiveInspectionSession(activeSession);
+        return; // Don't load other data if inspection is active
+      }
+
       const [penaltyStats, allPenaltiesData, zugsauData, allMembers, activePenaltyTypes, membersWithStats] = await Promise.all([
         penaltyService.getStats(),
         penaltyService.getAll(),
@@ -265,11 +282,71 @@ const AdminDashboard = () => {
     });
   };
 
+  const handleStartInspection = async (anlass: string) => {
+    try {
+      const session = await inspectionService.startSession(anlass);
+      setInspectionActive(true);
+      setActiveInspectionSession(session);
+      toast({
+        title: "Musterung gestartet",
+        description: `Musterung "${anlass}" wurde gestartet.`,
+      });
+    } catch (error) {
+      console.error('Failed to start inspection:', error);
+      toast({
+        title: "Fehler",
+        description: "Musterung konnte nicht gestartet werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleEndInspection = () => {
+    setInspectionActive(false);
+    setActiveInspectionSession(null);
+    // Refresh dashboard data
+    loadDashboardData();
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
     localStorage.removeItem('checkInSession'); // Clear check-in session on logout
     navigate('/');
   };
+
+  // Show Inspection Active Screen if inspection is active
+  if (inspectionActive && activeInspectionSession) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">Spieß Dashboard</h1>
+                <p className="text-primary-foreground/80">Musterungsmodus</p>
+              </div>
+              <Button
+                variant="outline-inverse"
+                size="sm"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Abmelden
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-6">
+          <InspectionActiveScreen
+            session={activeInspectionSession}
+            onEnd={handleEndInspection}
+          />
+        </div>
+      </div>
+    );
+  }
 
   // Show Check-in Active Screen if check-in is active
   if (checkInActive) {
@@ -358,7 +435,7 @@ const AdminDashboard = () => {
                 Gutschrift hinzufügen
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <Button
                 onClick={() => setCheckInStartModalOpen(true)}
                 variant="outline"
@@ -366,6 +443,14 @@ const AdminDashboard = () => {
               >
                 <Clock className="w-4 h-4 mr-2" />
                 Check-in starten
+              </Button>
+              <Button
+                onClick={() => setInspectionStartModalOpen(true)}
+                variant="outline"
+                className="h-12 border-2 border-purple-500 text-purple-600 hover:bg-purple-50"
+              >
+                <User className="w-4 h-4 mr-2" />
+                Musterung starten
               </Button>
               <Button
                 variant="outline"
@@ -607,6 +692,13 @@ const AdminDashboard = () => {
         open={checkInStartModalOpen}
         onOpenChange={setCheckInStartModalOpen}
         onStart={handleStartCheckIn}
+      />
+
+      {/* Inspection Start Modal */}
+      <InspectionStartModal
+        open={inspectionStartModalOpen}
+        onOpenChange={setInspectionStartModalOpen}
+        onStart={handleStartInspection}
       />
     </div>
   );

@@ -88,3 +88,33 @@ export const MEMBER_RANKS = {
   major: 'Major',
   oberst: 'Oberst'
 } as const;
+
+// Inspection types
+export interface InspectionSession {
+  id: string;
+  anlass: string;
+  start_time: string;
+  end_time?: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface InspectionResult {
+  id: string;
+  session_id: string;
+  member_id: string;
+  status: 'offen' | 'gemustert';
+  inspection_data: any;
+  created_at: string;
+  updated_at: string;
+  member?: Member;
+}
+
+export interface InspectionData {
+  kopf: { [key: string]: 'neutral' | 'ok' | 'fehler' };
+  oberkoerper: { [key: string]: 'neutral' | 'ok' | 'fehler' };
+  unterkoerper: { [key: string]: 'neutral' | 'ok' | 'fehler' };
+  ausruestung: { [key: string]: 'neutral' | 'ok' | 'fehler' };
+  sonstiges: { [key: string]: 'neutral' | 'ok' | 'fehler' };
+}
