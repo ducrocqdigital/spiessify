@@ -139,7 +139,7 @@ const AdminDashboard = () => {
         ...filterOptions
       });
       
-      console.log('Filtered data received:', filteredData.length, 'items');
+      console.log('Filtered data received:', filteredData.length, 'items', 'pageSize:', pageSize);
       
       if (reset) {
         setPenalties(filteredData);
@@ -147,6 +147,7 @@ const AdminDashboard = () => {
         setPenalties(prev => [...prev, ...filteredData]);
       }
       
+      // Set hasMore based on whether we got a full page
       setHasMore(filteredData.length === pageSize);
     } catch (error) {
       console.error('Failed to load filtered penalties:', error);
