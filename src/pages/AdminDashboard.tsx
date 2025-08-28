@@ -40,6 +40,7 @@ const AdminDashboard = () => {
   const [checkInActive, setCheckInActive] = useState(false);
   const [checkInStartModalOpen, setCheckInStartModalOpen] = useState(false);
   const [checkInReferenceTime, setCheckInReferenceTime] = useState('');
+  const [checkInOccasion, setCheckInOccasion] = useState('');
   
   // Filters
   const [filters, setFilters] = useState({
@@ -63,6 +64,7 @@ const AdminDashboard = () => {
       const checkInData = JSON.parse(savedCheckIn);
       setCheckInActive(true);
       setCheckInReferenceTime(checkInData.referenceTime);
+      setCheckInOccasion(checkInData.occasion || '');
     }
     
     loadDashboardData();
@@ -203,13 +205,15 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleStartCheckIn = (referenceTime: string) => {
+  const handleStartCheckIn = (referenceTime: string, occasion: string) => {
     setCheckInActive(true);
     setCheckInReferenceTime(referenceTime);
+    setCheckInOccasion(occasion);
     
     // Save to localStorage to persist across page reloads
     localStorage.setItem('checkInSession', JSON.stringify({
       referenceTime,
+      occasion,
       startTime: new Date().toISOString()
     }));
   };
@@ -217,6 +221,7 @@ const AdminDashboard = () => {
   const handleEndCheckIn = (checkedMembers: any[]) => {
     setCheckInActive(false);
     setCheckInReferenceTime('');
+    setCheckInOccasion('');
     
     // Clear localStorage
     localStorage.removeItem('checkInSession');
@@ -262,6 +267,7 @@ const AdminDashboard = () => {
         <div className="container mx-auto px-4 py-6">
           <CheckInActiveScreen
             referenceTime={checkInReferenceTime}
+            occasion={checkInOccasion}
             onEnd={handleEndCheckIn}
           />
         </div>

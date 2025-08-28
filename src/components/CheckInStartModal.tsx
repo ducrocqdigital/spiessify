@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 interface CheckInStartModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onStart: (referenceTime: string) => void;
+  onStart: (referenceTime: string, occasion: string) => void;
 }
 
 export const CheckInStartModal = ({ open, onOpenChange, onStart }: CheckInStartModalProps) => {
@@ -16,9 +16,10 @@ export const CheckInStartModal = ({ open, onOpenChange, onStart }: CheckInStartM
     const now = new Date();
     return now.toTimeString().slice(0, 5);
   });
+  const [occasion, setOccasion] = useState('');
 
   const handleStart = () => {
-    onStart(referenceTime);
+    onStart(referenceTime, occasion);
     onOpenChange(false);
   };
 
@@ -36,6 +37,16 @@ export const CheckInStartModal = ({ open, onOpenChange, onStart }: CheckInStartM
               type="time"
               value={referenceTime}
               onChange={(e) => setReferenceTime(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="occasion">Anlass</Label>
+            <Input
+              id="occasion"
+              type="text"
+              placeholder="z.B. Trainingsschießen, Wettkampf..."
+              value={occasion}
+              onChange={(e) => setOccasion(e.target.value)}
             />
           </div>
           <div className="flex justify-end gap-3">

@@ -19,10 +19,11 @@ interface CheckedMember {
 
 interface CheckInActiveScreenProps {
   referenceTime: string;
+  occasion: string;
   onEnd: (checkedMembers: CheckedMember[]) => void;
 }
 
-export const CheckInActiveScreen = ({ referenceTime, onEnd }: CheckInActiveScreenProps) => {
+export const CheckInActiveScreen = ({ referenceTime, occasion, onEnd }: CheckInActiveScreenProps) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [checkedMembers, setCheckedMembers] = useState<CheckedMember[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -59,11 +60,24 @@ export const CheckInActiveScreen = ({ referenceTime, onEnd }: CheckInActiveScree
     return refDate;
   };
 
-  const getCurrentDelay = () => {
+  const getTimeStatus = () => {
     const refDateTime = getReferenceDateTime();
     const diffMs = currentTime.getTime() - refDateTime.getTime();
     const diffMinutes = Math.floor(diffMs / (1000 * 60));
-    return Math.max(0, diffMinutes);
+    
+    if (diffMinutes <= 0) {
+      return {
+        text: `Noch ${Math.abs(diffMinutes)} Min`,
+        color: 'text-green-600',
+        isLate: false
+      };
+    } else {
+      return {
+        text: `Verspätung: +${diffMinutes} Min`,
+        color: 'text-orange-600',
+        isLate: true
+      };
+    }
   };
 
   const handleMemberClick = (member: Member) => {
@@ -111,7 +125,7 @@ export const CheckInActiveScreen = ({ referenceTime, onEnd }: CheckInActiveScree
           member_id: selectedMember.id,
           penalty_type_id: latePenalty.id,
           amount: penaltyAmount,
-          notes: `Check-in Verspätung: +${lateMinutes} Minuten`
+          notes: `${occasion} - Check-in Verspätung: +${lateMinutes} Minuten`
         });
       } else {
         // If no penalty type found, we still need to create a record
@@ -173,13 +187,13 @@ export const CheckInActiveScreen = ({ referenceTime, onEnd }: CheckInActiveScree
           <h2 className="text-xl font-semibold">
             Check-in aktiv – Referenz: {referenceTime}
           </h2>
-          <div className="text-sm text-muted-foreground">
-            Aktuelle Zeit: {currentTime.toTimeString().slice(0, 8)}
-            {getCurrentDelay() > 0 && (
-              <span className="ml-2 text-orange-600">
-                Verspätung: +{getCurrentDelay()} Min
-              </span>
-            )}
+          <div className="text-sm">
+            <div className="text-muted-foreground">
+              Aktuelle Zeit: {currentTime.toTimeString().slice(0, 8)}
+            </div>
+            <div className={`font-medium ${getTimeStatus().color}`}>
+              {getTimeStatus().text}
+            </div>
           </div>
         </div>
         <Button
