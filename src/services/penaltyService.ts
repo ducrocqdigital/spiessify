@@ -17,6 +17,57 @@ export const penaltyService = {
     return (data || []) as Penalty[];
   },
 
+  // Get penalties with filters and pagination
+  async getFiltered(options: {
+    limit?: number;
+    offset?: number;
+    memberId?: string;
+    categoryFilter?: string;
+    dateFrom?: string;
+    dateTo?: string;
+  } = {}): Promise<Penalty[]> {
+    const { limit = 10, offset = 0, memberId, categoryFilter, dateFrom, dateTo } = options;
+    
+    let query = supabase
+      .from('penalties')
+      .select(`
+        *,
+        member:members(*),
+        penalty_type:penalty_catalog(*)
+      `)
+      .order('created_time', { ascending: false });
+
+    if (memberId) {
+      query = query.eq('member_id', memberId);
+    }
+
+    if (dateFrom) {
+      query = query.gte('date', dateFrom);
+    }
+
+    if (dateTo) {
+      query = query.lte('date', dateTo);
+    }
+
+    if (categoryFilter && categoryFilter !== 'all') {
+      // We need to filter by category through the penalty_catalog relationship
+      const { data: penaltyTypes } = await supabase
+        .from('penalty_catalog')
+        .select('id')
+        .eq('category', categoryFilter);
+      
+      if (penaltyTypes && penaltyTypes.length > 0) {
+        const penaltyTypeIds = penaltyTypes.map(pt => pt.id);
+        query = query.in('penalty_type_id', penaltyTypeIds);
+      }
+    }
+
+    const { data, error } = await query.range(offset, offset + limit - 1);
+    
+    if (error) throw error;
+    return (data || []) as Penalty[];
+  },
+
   // Get penalties for a specific member
   async getByMemberId(memberId: string): Promise<Penalty[]> {
     const { data, error } = await supabase

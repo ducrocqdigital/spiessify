@@ -14,14 +14,28 @@ import { penaltyService } from '@/services/penaltyService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { memberService } from '@/services/memberService';
 import { Penalty, Member, PenaltyCatalog, PENALTY_CATALOG_CATEGORIES } from '@/types';
-import { Plus, Edit2, ArrowLeft, Trash2, Euro, Settings } from 'lucide-react';
+import { Plus, Edit2, ArrowLeft, Trash2, Euro, Settings, Filter, Calendar, Users } from 'lucide-react';
+import { formatDateTime } from '@/utils/dateUtils';
 
 const PenaltyManagement = () => {
   const navigate = useNavigate();
   const [penalties, setPenalties] = useState<Penalty[]>([]);
+  const [allPenalties, setAllPenalties] = useState<Penalty[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [penaltyTypes, setPenaltyTypes] = useState<PenaltyCatalog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [pageSize, setPageSize] = useState(10);
+  
+  // Filters
+  const [filters, setFilters] = useState({
+    memberId: '',
+    category: 'all',
+    dateFrom: '',
+    dateTo: ''
+  });
+  
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -46,14 +60,17 @@ const PenaltyManagement = () => {
 
   const loadData = async () => {
     try {
-      const [penaltiesData, membersData, penaltyTypesData] = await Promise.all([
+      const [allPenaltiesData, membersData, penaltyTypesData] = await Promise.all([
         penaltyService.getAll(),
         memberService.getAll(),
         penaltyCatalogService.getActive()
       ]);
-      setPenalties(penaltiesData);
+      setAllPenalties(allPenaltiesData);
       setMembers(membersData);
       setPenaltyTypes(penaltyTypesData);
+      
+      // Load initial filtered data
+      await loadFilteredPenalties(true);
     } catch (error) {
       toast({
         title: "Fehler",
@@ -63,6 +80,58 @@ const PenaltyManagement = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const loadFilteredPenalties = async (reset = false) => {
+    if (loadingMore && !reset) return;
+    
+    if (!reset) setLoadingMore(true);
+    
+    try {
+      const offset = reset ? 0 : penalties.length;
+      const filteredData = await penaltyService.getFiltered({
+        limit: pageSize,
+        offset,
+        memberId: filters.memberId || undefined,
+        categoryFilter: filters.category,
+        dateFrom: filters.dateFrom || undefined,
+        dateTo: filters.dateTo || undefined
+      });
+      
+      if (reset) {
+        setPenalties(filteredData);
+      } else {
+        setPenalties(prev => [...prev, ...filteredData]);
+      }
+      
+      setHasMore(filteredData.length === pageSize);
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Strafen konnten nicht geladen werden.",
+        variant: "destructive",
+      });
+    } finally {
+      if (!reset) setLoadingMore(false);
+    }
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const applyFilters = () => {
+    loadFilteredPenalties(true);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      memberId: '',
+      category: 'all',
+      dateFrom: '',
+      dateTo: ''
+    });
+    setTimeout(() => loadFilteredPenalties(true), 0);
   };
 
   const resetForm = () => {
@@ -179,7 +248,7 @@ const PenaltyManagement = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('de-DE');
+    return formatDateTime(dateString);
   };
 
   const getCategoryBadgeVariant = (category: string) => {
@@ -311,9 +380,103 @@ const PenaltyManagement = () => {
         </div>
       </div>
 
+      {/* Filters */}
+      <Card className="mb-6">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="h-5 w-5" />
+            Filter & Einstellungen
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6 gap-4 mb-4">
+            <div>
+              <Label htmlFor="pageSize">Einträge pro Seite</Label>
+              <Select value={pageSize.toString()} onValueChange={(value) => {
+                setPageSize(parseInt(value));
+                setTimeout(() => loadFilteredPenalties(true), 0);
+              }}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5</SelectItem>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="40">40</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="memberFilter">Mitglied</Label>
+              <Select value={filters.memberId} onValueChange={(value) => handleFilterChange('memberId', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Alle Mitglieder" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Alle Mitglieder</SelectItem>
+                  {members
+                    .filter(member => member.is_active)
+                    .map((member) => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {memberService.getDisplayName(member)}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="categoryFilter">Kategorie</Label>
+              <Select value={filters.category} onValueChange={(value) => handleFilterChange('category', value)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Alle Kategorien" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Alle Kategorien</SelectItem>
+                  {Object.entries(PENALTY_CATALOG_CATEGORIES).map(([key, name]) => (
+                    <SelectItem key={key} value={key}>{name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <Label htmlFor="dateFrom">Von Datum</Label>
+              <Input
+                id="dateFrom"
+                type="date"
+                value={filters.dateFrom}
+                onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="dateTo">Bis Datum</Label>
+              <Input
+                id="dateTo"
+                type="date"
+                value={filters.dateTo}
+                onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+              />
+            </div>
+            
+            <div className="flex items-end gap-2">
+              <Button onClick={applyFilters} className="flex-1">
+                Anwenden
+              </Button>
+              <Button variant="outline" onClick={clearFilters}>
+                Zurücksetzen
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
-          <CardTitle>Alle Strafen ({penalties.length})</CardTitle>
+          <CardTitle>Strafen ({allPenalties.length} gesamt, {penalties.length} angezeigt)</CardTitle>
           <CardDescription>
             Verwalten Sie die Strafen der Schützengesellschaft
           </CardDescription>
@@ -326,7 +489,7 @@ const PenaltyManagement = () => {
                 <TableHead>Strafart</TableHead>
                 <TableHead>Kategorie</TableHead>
                 <TableHead>Betrag</TableHead>
-                <TableHead>Datum</TableHead>
+                <TableHead>Datum & Zeit</TableHead>
                 <TableHead>Notizen</TableHead>
                 <TableHead className="text-right">Aktionen</TableHead>
               </TableRow>
@@ -353,7 +516,7 @@ const PenaltyManagement = () => {
                       <span className="font-medium">{penalty.amount}</span>
                     </div>
                   </TableCell>
-                  <TableCell>{formatDate(penalty.date)}</TableCell>
+                  <TableCell>{formatDate(penalty.created_time || penalty.date)}</TableCell>
                   <TableCell>
                     <div className="max-w-32 truncate text-sm text-muted-foreground">
                       {penalty.notes || '-'}
@@ -383,6 +546,18 @@ const PenaltyManagement = () => {
               ))}
             </TableBody>
           </Table>
+          
+          {hasMore && (
+            <div className="text-center pt-4">
+              <Button 
+                variant="outline" 
+                onClick={() => loadFilteredPenalties(false)}
+                disabled={loadingMore}
+              >
+                {loadingMore ? 'Lädt...' : `${pageSize} weitere laden`}
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
 
