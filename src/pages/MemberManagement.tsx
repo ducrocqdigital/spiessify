@@ -200,19 +200,19 @@ const MemberManagement = () => {
   }
 
   return (
-    <div className="container mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <Button variant="outline" onClick={() => navigate('/admin')}>
+    <div className="container mx-auto p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 min-w-0">
+          <Button variant="outline" onClick={() => navigate('/admin')} className="w-fit">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Zurück zum Dashboard
           </Button>
-          <h1 className="text-3xl font-bold">Mitgliederverwaltung</h1>
+          <h1 className="text-2xl md:text-3xl font-bold truncate">Mitgliederverwaltung</h1>
         </div>
         
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button onClick={() => setIsAddDialogOpen(true)}>
+            <Button onClick={() => setIsAddDialogOpen(true)} className="w-full md:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Neues Mitglied
             </Button>
