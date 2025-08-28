@@ -116,11 +116,14 @@ const AdminDashboard = () => {
   };
 
   const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    const newFilters = { ...filters, [key]: value };
+    setFilters(newFilters);
+    setTimeout(() => loadFilteredPenalties(true), 0);
   };
 
-  const applyFilters = () => {
-    loadFilteredPenalties(true);
+  const handlePageSizeChange = (value: string) => {
+    setPageSize(parseInt(value));
+    setTimeout(() => loadFilteredPenalties(true), 0);
   };
 
   const clearFilters = () => {
@@ -307,22 +310,22 @@ const AdminDashboard = () => {
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle>Strafenverwaltung ({allPenalties.length} gesamt, {penalties.length} angezeigt)</CardTitle>
+                <CardTitle>Strafenverwaltung</CardTitle>
                 <CardDescription>
                   Alle Strafen mit Bearbeitungs- und Löschfunktionen
                 </CardDescription>
+                <div className="text-sm text-muted-foreground mt-1">
+                  {allPenalties.length} gesamt, {penalties.length} angezeigt
+                </div>
               </div>
             </div>
             
             {/* Compact Filters */}
             <div className="border-t pt-4">
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 items-end">
                 <div>
                   <Label htmlFor="pageSize" className="text-xs">Einträge</Label>
-                  <Select value={pageSize.toString()} onValueChange={(value) => {
-                    setPageSize(parseInt(value));
-                    setTimeout(() => loadFilteredPenalties(true), 0);
-                  }}>
+                  <Select value={pageSize.toString()} onValueChange={handlePageSizeChange}>
                     <SelectTrigger className="h-8">
                       <SelectValue />
                     </SelectTrigger>
@@ -378,13 +381,6 @@ const AdminDashboard = () => {
                     value={filters.date}
                     onChange={(e) => handleFilterChange('date', e.target.value)}
                   />
-                </div>
-                
-                <div className="flex gap-1">
-                  <Button onClick={applyFilters} size="sm" className="h-8 flex-1">
-                    <Filter className="w-3 h-3 mr-1" />
-                    Anwenden
-                  </Button>
                 </div>
                 
                 <div>
