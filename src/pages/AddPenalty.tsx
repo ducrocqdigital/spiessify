@@ -241,6 +241,7 @@ const AddPenalty = () => {
                     size="sm"
                     onClick={handleBackStep}
                     className="text-primary-foreground hover:bg-primary-foreground/10 p-2 touch-button"
+                    data-variant="ghost"
                   >
                     <ArrowLeft className="w-4 h-4" />
                   </Button>
@@ -255,6 +256,7 @@ const AddPenalty = () => {
                   navigate('/admin');
                 }}
                 className="text-primary-foreground hover:bg-primary-foreground/10 p-3 touch-button"
+                data-variant="ghost"
               >
                 <X className="w-6 h-6" />
               </Button>
@@ -432,6 +434,7 @@ const AddPenalty = () => {
                 type="button"
                 onClick={handleSubmit}
                 className="w-full h-16 text-lg bg-gradient-to-r from-primary to-primary-glow touch-button"
+                data-variant="default"
               >
                 <Check className="w-5 h-5 mr-2" />
                 Strafe hinzufügen

@@ -186,45 +186,34 @@ All colors MUST be HSL.
     touch-action: manipulation;
     position: relative;
     overflow: hidden;
-    transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.1s ease-out;
   }
   
-  /* Active state for better touch feedback */
+  /* Strong active state for better touch feedback */
   .touch-button:active {
-    transform: scale(0.96);
-    transition: transform 0.1s ease-out;
+    transform: scale(0.92);
+    transition: transform 0.05s ease-out;
   }
   
   /* Enhanced feedback for different button variants */
   .touch-button[data-variant="outline"]:active {
-    background-color: hsl(var(--primary) / 0.08);
-    border-color: hsl(var(--primary) / 0.5);
+    background-color: hsl(var(--primary) / 0.2);
+    border-color: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.3);
   }
   
   .touch-button[data-variant="default"]:active,
   .touch-button.bg-gradient-to-r:active {
-    background: linear-gradient(135deg, hsl(var(--primary) / 0.9), hsl(var(--primary-glow) / 0.9));
-    box-shadow: 0 0 0 2px hsl(var(--primary) / 0.2);
+    background: hsl(var(--primary) / 0.8) !important;
+    box-shadow: 0 0 0 3px hsl(var(--primary) / 0.4), 0 4px 12px hsl(var(--primary) / 0.3);
+    transform: scale(0.92) translateY(1px);
   }
   
-  /* Ripple effect */
-  .touch-button::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    border-radius: 50%;
-    background: hsl(var(--primary-foreground) / 0.3);
-    transform: translate(-50%, -50%);
-    transition: width 0.3s ease, height 0.3s ease;
-    pointer-events: none;
-  }
-  
-  .touch-button:active::after {
-    width: 100px;
-    height: 100px;
+  /* Back/navigation buttons */
+  .touch-button[data-variant="ghost"]:active {
+    background-color: hsl(var(--primary-foreground) / 0.2) !important;
+    transform: scale(0.9);
   }
 }
 
