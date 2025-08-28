@@ -8,7 +8,7 @@ export const penaltyCatalogService = {
       .from('penalty_catalog')
       .select('*')
       .order('category', { ascending: true })
-      .order('name', { ascending: true });
+      .order('amount', { ascending: true });
     
     if (error) throw error;
     return (data || []) as PenaltyCatalog[];
@@ -21,7 +21,7 @@ export const penaltyCatalogService = {
       .select('*')
       .eq('is_active', true)
       .order('category', { ascending: true })
-      .order('name', { ascending: true });
+      .order('amount', { ascending: true });
     
     if (error) throw error;
     return (data || []) as PenaltyCatalog[];
@@ -34,7 +34,7 @@ export const penaltyCatalogService = {
       .select('*')
       .eq('category', category)
       .eq('is_active', true)
-      .order('name', { ascending: true });
+      .order('amount', { ascending: true });
     
     if (error) throw error;
     return (data || []) as PenaltyCatalog[];
