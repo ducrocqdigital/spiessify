@@ -105,29 +105,33 @@ const AdminDashboard = () => {
     }
   };
 
-  const loadFilteredPenalties = async (reset = false) => {
+  const loadFilteredPenalties = async (reset = false, useFilters = filters) => {
     if (loadingMore && !reset) return;
     
     if (!reset) setLoadingMore(true);
     
     try {
       const offset = reset ? 0 : penalties.length;
+      
+      // Use passed filters or current filters, with proper sanitization
+      const filterOptions = {
+        memberId: useFilters.memberId && useFilters.memberId.trim() !== '' ? useFilters.memberId.trim() : undefined,
+        categoryFilter: useFilters.category === "all" ? undefined : useFilters.category,
+        dateFrom: useFilters.date && useFilters.date.trim() !== '' ? useFilters.date.trim() : undefined,
+        dateTo: useFilters.date && useFilters.date.trim() !== '' ? useFilters.date.trim() : undefined
+      };
+      
       console.log('Loading filtered penalties:', {
         limit: pageSize,
         offset,
-        memberId: filters.memberId || undefined,
-        categoryFilter: filters.category === "all" ? undefined : filters.category,
-        dateFrom: filters.date || undefined,
-        dateTo: filters.date || undefined
+        ...filterOptions,
+        originalFilters: useFilters
       });
       
       const filteredData = await penaltyService.getFiltered({
         limit: pageSize,
         offset,
-        memberId: filters.memberId || undefined,
-        categoryFilter: filters.category === "all" ? undefined : filters.category,
-        dateFrom: filters.date || undefined,
-        dateTo: filters.date || undefined
+        ...filterOptions
       });
       
       console.log('Filtered data received:', filteredData.length, 'items');
@@ -140,6 +144,7 @@ const AdminDashboard = () => {
       
       setHasMore(filteredData.length === pageSize);
     } catch (error) {
+      console.error('Failed to load filtered penalties:', error);
       toast({
         title: "Fehler",
         description: "Strafen konnten nicht geladen werden.",
@@ -154,32 +159,35 @@ const AdminDashboard = () => {
     console.log('Filter change:', key, value);
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
-    console.log('New filters:', newFilters);
+    console.log('New filters set:', newFilters);
     
     // Reset pagination when filters change
     setPenalties([]);
     setHasMore(true);
     
-    // Load filtered data with slight delay to ensure state is updated
-    setTimeout(() => loadFilteredPenalties(true), 50);
+    // Apply filter immediately with the new filter values
+    setTimeout(() => {
+      loadFilteredPenalties(true, newFilters);
+    }, 100);
   };
 
   const handlePageSizeChange = (value: string) => {
     setPageSize(parseInt(value));
     setPenalties([]);
     setHasMore(true);
-    setTimeout(() => loadFilteredPenalties(true), 50);
+    setTimeout(() => loadFilteredPenalties(true, filters), 100);
   };
 
   const clearFilters = () => {
-    setFilters({
+    const emptyFilters = {
       memberId: '',
       category: 'all',
       date: ''
-    });
+    };
+    setFilters(emptyFilters);
     setPenalties([]);
     setHasMore(true);
-    setTimeout(() => loadFilteredPenalties(true), 50);
+    setTimeout(() => loadFilteredPenalties(true, emptyFilters), 100);
   };
 
   const handleEditPenalty = async (id: string, updates: Partial<Penalty>) => {
