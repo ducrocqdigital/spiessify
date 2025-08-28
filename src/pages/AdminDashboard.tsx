@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Minus, Filter, Clock } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Minus, Filter, Clock, Trophy, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import SettingsMenu from '@/components/SettingsMenu';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
@@ -19,6 +20,7 @@ import { CheckInActiveScreen } from '@/components/CheckInActiveScreen';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [memberRanking, setMemberRanking] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalMembers: 0,
     totalPenalties: 0,
@@ -80,12 +82,13 @@ const AdminDashboard = () => {
 
   const loadDashboardData = async () => {
     try {
-      const [penaltyStats, allPenaltiesData, zugsauData, allMembers, activePenaltyTypes] = await Promise.all([
+      const [penaltyStats, allPenaltiesData, zugsauData, allMembers, activePenaltyTypes, membersWithStats] = await Promise.all([
         penaltyService.getStats(),
         penaltyService.getAll(),
         penaltyService.getZugsau(),
         memberService.getAll(),
-        penaltyCatalogService.getActive()
+        penaltyCatalogService.getActive(),
+        memberService.getMembersWithStats()
       ]);
       
       setStats({
@@ -96,6 +99,7 @@ const AdminDashboard = () => {
       setMembers(allMembers);
       setPenaltyTypes(activePenaltyTypes);
       setZugsau(zugsauData);
+      setMemberRanking(membersWithStats.sort((a, b) => b.totalAmount - a.totalAmount));
       
       // Load initial filtered data
       await loadFilteredPenalties(true);
@@ -531,6 +535,61 @@ const AdminDashboard = () => {
                   </div>
                 )}
               </>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Member Ranking Overview */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Trophy className="h-5 w-5 text-primary" />
+              Schützen Ranking
+            </CardTitle>
+            <CardDescription>
+              Übersicht aller Schützen sortiert nach Strafenbetrag
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loading ? (
+              <div className="text-center text-muted-foreground py-8">Laden...</div>
+            ) : (
+              <div className="space-y-2">
+                {memberRanking.slice(0, 10).map((member, index) => (
+                  <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+                        {index + 1}
+                      </div>
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage 
+                          src={member.profile_photo} 
+                          alt={memberService.getDisplayName(member)} 
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="font-medium text-card-foreground">
+                          {memberService.getDisplayName(member)}
+                        </div>
+                        <div className="text-sm text-muted-foreground">
+                          {member.penaltyCount} Strafen
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-lg font-bold text-primary">
+                      {member.totalAmount.toFixed(2)}€
+                    </div>
+                  </div>
+                ))}
+                {memberRanking.length > 10 && (
+                  <div className="text-center text-sm text-muted-foreground pt-2">
+                    ... und {memberRanking.length - 10} weitere Schützen
+                  </div>
+                )}
+              </div>
             )}
           </CardContent>
         </Card>
