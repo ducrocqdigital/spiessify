@@ -93,7 +93,7 @@ const AdminDashboard = () => {
         limit: pageSize,
         offset,
         memberId: filters.memberId || undefined,
-        categoryFilter: filters.category,
+        categoryFilter: filters.category === "all" ? undefined : filters.category,
         dateFrom: filters.dateFrom || undefined,
         dateTo: filters.dateTo || undefined
       });
@@ -334,12 +334,12 @@ const AdminDashboard = () => {
               
               <div>
                 <Label htmlFor="memberFilter">Mitglied</Label>
-                <Select value={filters.memberId} onValueChange={(value) => handleFilterChange('memberId', value)}>
+                <Select value={filters.memberId || "all"} onValueChange={(value) => handleFilterChange('memberId', value === "all" ? "" : value)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Alle Mitglieder" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="">Alle Mitglieder</SelectItem>
+                    <SelectItem value="all">Alle Mitglieder</SelectItem>
                     {members
                       .filter(member => member.is_active)
                       .map((member) => (
