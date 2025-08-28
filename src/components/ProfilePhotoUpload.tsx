@@ -122,6 +122,8 @@ const ProfilePhotoUpload: React.FC<ProfilePhotoUploadProps> = ({
         photoUrl = tempUrl;
       } else {
         photoUrl = await memberService.uploadProfilePhoto(memberId, file);
+        // Force page reload to refresh image cache
+        window.location.reload();
         onPhotoUpdated(photoUrl);
       }
       

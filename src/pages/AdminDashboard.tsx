@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Settings, Minus, Filter, Clock } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Minus, Filter, Clock } from 'lucide-react';
+import SettingsMenu from '@/components/SettingsMenu';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
@@ -310,14 +311,17 @@ const AdminDashboard = () => {
               <h1 className="text-2xl font-bold">Spieß Dashboard</h1>
               <p className="text-primary-foreground/80">Strafen verwalten</p>
             </div>
-            <Button
-              variant="outline-inverse"
-              size="sm"
-              onClick={handleLogout}
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Abmelden
-            </Button>
+            <div className="flex items-center gap-2">
+              <SettingsMenu />
+              <Button
+                variant="outline-inverse"
+                size="sm"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Abmelden
+              </Button>
+            </div>
           </div>
         </div>
       </div>
@@ -349,7 +353,7 @@ const AdminDashboard = () => {
                 Gutschrift hinzufügen
               </Button>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Button
                 onClick={() => setCheckInStartModalOpen(true)}
                 variant="outline"
@@ -357,22 +361,6 @@ const AdminDashboard = () => {
               >
                 <Clock className="w-4 h-4 mr-2" />
                 Check-in starten
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/admin/members')}
-                className="h-12"
-              >
-                <Users className="w-4 h-4 mr-2" />
-                Mitglieder verwalten
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => navigate('/admin/penalty-catalog')}
-                className="h-12"
-              >
-                <Settings className="w-4 h-4 mr-2" />
-                Strafenkatalog verwalten
               </Button>
               <Button
                 variant="outline"

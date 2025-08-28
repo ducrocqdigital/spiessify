@@ -7,7 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Pencil, Trash2, MapPin } from 'lucide-react';
+import { Pencil, Trash2, MapPin, User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDateTime } from '@/utils/dateUtils';
 import { memberService } from '@/services/memberService';
 
@@ -86,36 +87,58 @@ const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes 
           <div className="text-center text-muted-foreground py-8">Keine Strafen vorhanden</div>
         ) : (
           penalties.map((penalty) => (
-            <div key={penalty.id} className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
-              <div className="flex-1">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="font-medium">
-                    {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
+            <div key={penalty.id} className="border border-border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-4">
+                {/* Member Avatar */}
+                <Avatar className="h-12 w-12 shrink-0">
+                  <AvatarImage 
+                    src={penalty.member?.profile_photo} 
+                    alt={penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'} 
+                  />
+                  <AvatarFallback className="bg-primary/10 text-primary">
+                    <User className="h-6 w-6" />
+                  </AvatarFallback>
+                </Avatar>
+                
+                {/* Content */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h4 className="font-medium text-card-foreground">
+                        {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
+                      </h4>
+                      <Badge variant={getCategoryBadgeVariant(penalty.penalty_type?.category || '')}>
+                        {penalty.penalty_type?.category || 'Unbekannt'}
+                      </Badge>
+                    </div>
+                    <div className="text-lg font-bold text-primary">{penalty.amount}€</div>
                   </div>
-                  <Badge variant={getCategoryBadgeVariant(penalty.penalty_type?.category || '')}>
-                    {penalty.penalty_type?.category || 'Unbekannt'}
-                  </Badge>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <div>{penalty.penalty_type?.name || 'Unbekannt'}</div>
-                  <div className="flex items-center gap-2">
-                    <span>{formatDateTime(penalty.created_time || penalty.created_at)}</span>
-                    {penalty.location_latitude && penalty.location_longitude && (
-                      <MapPin className="w-3 h-3" />
+                  
+                  <div className="text-sm text-muted-foreground space-y-1">
+                    <div className="font-medium text-card-foreground">
+                      {penalty.penalty_type?.name || 'Unbekannt'}
+                    </div>
+                    <div className="flex items-center gap-2 text-xs">
+                      <span>{formatDateTime(penalty.created_time || penalty.created_at)}</span>
+                      {penalty.location_latitude && penalty.location_longitude && (
+                        <MapPin className="w-3 h-3" />
+                      )}
+                    </div>
+                    {penalty.notes && (
+                      <div className="text-xs bg-muted p-2 rounded text-muted-foreground">
+                        {penalty.notes}
+                      </div>
                     )}
                   </div>
-                  {penalty.notes && (
-                    <div className="text-xs mt-1">{penalty.notes}</div>
-                  )}
                 </div>
-              </div>
-              <div className="text-right flex items-center gap-2">
-                <div className="font-bold text-primary">{penalty.amount}€</div>
-                <div className="flex gap-1">
+                
+                {/* Actions */}
+                <div className="flex gap-1 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openEditDialog(penalty)}
+                    className="h-8 w-8 p-0"
                   >
                     <Pencil className="w-3 h-3" />
                   </Button>
@@ -123,6 +146,7 @@ const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes 
                     variant="outline"
                     size="sm"
                     onClick={() => openDeleteDialog(penalty)}
+                    className="h-8 w-8 p-0 hover:border-destructive hover:text-destructive"
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>

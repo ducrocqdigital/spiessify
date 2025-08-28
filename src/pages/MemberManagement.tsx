@@ -334,94 +334,183 @@ const MemberManagement = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Profilbild</TableHead>
-                <TableHead>Name</TableHead>
-                <TableHead>Rang</TableHead>
-                <TableHead>E-Mail</TableHead>
-                <TableHead>Telefon</TableHead>
-                <TableHead>Beitrittsjahr</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Aktionen</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {members.map((member) => (
-                <TableRow key={member.id} className={!member.is_active ? "opacity-50" : ""}>
-                  <TableCell>
-                    <Avatar className="h-10 w-10">
+          {/* Desktop Table View */}
+          <div className="hidden md:block">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Profilbild</TableHead>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Rang</TableHead>
+                  <TableHead>E-Mail</TableHead>
+                  <TableHead>Telefon</TableHead>
+                  <TableHead>Beitrittsjahr</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Aktionen</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {members.map((member) => (
+                  <TableRow key={member.id} className={!member.is_active ? "opacity-50" : ""}>
+                    <TableCell>
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage 
+                          src={member.profile_photo || undefined} 
+                          alt={`${member.first_name} ${member.last_name}`} 
+                        />
+                        <AvatarFallback className="bg-primary/10 text-primary">
+                          <User className="h-5 w-5" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </TableCell>
+                    <TableCell>
+                      <div>
+                        <div className="font-medium">
+                          {member.first_name} {member.last_name}
+                        </div>
+                        {member.nickname && (
+                          <div className="text-sm text-muted-foreground">
+                            "{member.nickname}"
+                          </div>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {MEMBER_RANKS[member.rank || 'schuetze']}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>{member.email}</TableCell>
+                    <TableCell>{member.phone}</TableCell>
+                    <TableCell>{member.join_year}</TableCell>
+                    <TableCell>
+                      <Badge variant={member.is_active ? "default" : "secondary"}>
+                        {member.is_active ? "Aktiv" : "Inaktiv"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(member)}
+                          className="hover:bg-primary/10"
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(member)}
+                          className={member.is_active ? "hover:bg-warning/10" : "hover:bg-success/10"}
+                        >
+                          {member.is_active ? (
+                            <ToggleRight className="h-4 w-4 text-warning" />
+                          ) : (
+                            <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteDialog(member)}
+                          className="hover:bg-destructive/10 hover:border-destructive/20"
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden space-y-4">
+            {members.map((member) => (
+              <Card key={member.id} className={`border ${!member.is_active ? "opacity-50" : ""}`}>
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-16 w-16">
                       <AvatarImage 
                         src={member.profile_photo || undefined} 
                         alt={`${member.first_name} ${member.last_name}`} 
                       />
                       <AvatarFallback className="bg-primary/10 text-primary">
-                        <User className="h-5 w-5" />
+                        <User className="h-8 w-8" />
                       </AvatarFallback>
                     </Avatar>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <div className="font-medium">
-                        {member.first_name} {member.last_name}
-                      </div>
-                      {member.nickname && (
-                        <div className="text-sm text-muted-foreground">
-                          "{member.nickname}"
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <h3 className="font-medium text-card-foreground">
+                            {member.first_name} {member.last_name}
+                          </h3>
+                          {member.nickname && (
+                            <p className="text-sm text-muted-foreground">"{member.nickname}"</p>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">
-                      {MEMBER_RANKS[member.rank || 'schuetze']}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{member.email}</TableCell>
-                  <TableCell>{member.phone}</TableCell>
-                  <TableCell>{member.join_year}</TableCell>
-                  <TableCell>
-                    <Badge variant={member.is_active ? "default" : "secondary"}>
-                      {member.is_active ? "Aktiv" : "Inaktiv"}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openEditDialog(member)}
-                        className="hover:bg-primary/10"
-                      >
-                        <Edit2 className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleToggleActive(member)}
-                        className={member.is_active ? "hover:bg-warning/10" : "hover:bg-success/10"}
-                      >
-                        {member.is_active ? (
-                          <ToggleRight className="h-4 w-4 text-warning" />
-                        ) : (
-                          <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                        <Badge variant={member.is_active ? "default" : "secondary"}>
+                          {member.is_active ? "Aktiv" : "Inaktiv"}
+                        </Badge>
+                      </div>
+                      
+                      <div className="space-y-1 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {MEMBER_RANKS[member.rank || 'schuetze']}
+                          </Badge>
+                          {member.join_year && (
+                            <span className="text-xs">Seit {member.join_year}</span>
+                          )}
+                        </div>
+                        {member.email && (
+                          <div className="text-xs">{member.email}</div>
                         )}
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => openDeleteDialog(member)}
-                        className="hover:bg-destructive/10 hover:border-destructive/20"
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
+                        {member.phone && (
+                          <div className="text-xs">{member.phone}</div>
+                        )}
+                      </div>
+                      
+                      <div className="flex gap-2 mt-3">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openEditDialog(member)}
+                          className="flex-1 h-8"
+                        >
+                          <Edit2 className="h-3 w-3 mr-1" />
+                          Bearbeiten
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleToggleActive(member)}
+                          className="h-8 px-2"
+                        >
+                          {member.is_active ? (
+                            <ToggleRight className="h-4 w-4 text-warning" />
+                          ) : (
+                            <ToggleLeft className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => openDeleteDialog(member)}
+                          className="h-8 px-2 hover:border-destructive hover:text-destructive"
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      </div>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </CardContent>
       </Card>
 
