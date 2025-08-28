@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Settings, Minus, Filter } from 'lucide-react';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Settings, Minus, Filter, Clock } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
@@ -13,6 +13,8 @@ import { Penalty, PENALTY_CATALOG_CATEGORIES } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import PenaltyTable from '@/components/PenaltyTable';
 import { AddCreditDialog } from '@/components/AddCreditDialog';
+import { CheckInStartModal } from '@/components/CheckInStartModal';
+import { CheckInActiveScreen } from '@/components/CheckInActiveScreen';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -34,6 +36,11 @@ const AdminDashboard = () => {
   const [pageSize, setPageSize] = useState(10);
   const [creditDialogOpen, setCreditDialogOpen] = useState(false);
   
+  // Check-in state
+  const [checkInActive, setCheckInActive] = useState(false);
+  const [checkInStartModalOpen, setCheckInStartModalOpen] = useState(false);
+  const [checkInReferenceTime, setCheckInReferenceTime] = useState('');
+  
   // Filters
   const [filters, setFilters] = useState({
     memberId: '',
@@ -48,6 +55,14 @@ const AdminDashboard = () => {
     if (!isAdmin) {
       navigate('/admin-login');
       return;
+    }
+    
+    // Check for active check-in session
+    const savedCheckIn = localStorage.getItem('checkInSession');
+    if (savedCheckIn) {
+      const checkInData = JSON.parse(savedCheckIn);
+      setCheckInActive(true);
+      setCheckInReferenceTime(checkInData.referenceTime);
     }
     
     loadDashboardData();
@@ -188,10 +203,71 @@ const AdminDashboard = () => {
     }
   };
 
+  const handleStartCheckIn = (referenceTime: string) => {
+    setCheckInActive(true);
+    setCheckInReferenceTime(referenceTime);
+    
+    // Save to localStorage to persist across page reloads
+    localStorage.setItem('checkInSession', JSON.stringify({
+      referenceTime,
+      startTime: new Date().toISOString()
+    }));
+  };
+
+  const handleEndCheckIn = (checkedMembers: any[]) => {
+    setCheckInActive(false);
+    setCheckInReferenceTime('');
+    
+    // Clear localStorage
+    localStorage.removeItem('checkInSession');
+    
+    // Here you could process the checked members data
+    // For now, we'll just show a toast
+    toast({
+      title: "Check-in beendet",
+      description: `${checkedMembers.length} Schützen wurden erfasst.`,
+    });
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('isAdmin');
+    localStorage.removeItem('checkInSession'); // Clear check-in session on logout
     navigate('/');
   };
+
+  // Show Check-in Active Screen if check-in is active
+  if (checkInActive) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">
+          <div className="container mx-auto px-4 py-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">Spieß Dashboard</h1>
+                <p className="text-primary-foreground/80">Check-in Modus</p>
+              </div>
+              <Button
+                variant="outline-inverse"
+                size="sm"
+                onClick={handleLogout}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Abmelden
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        <div className="container mx-auto px-4 py-6">
+          <CheckInActiveScreen
+            referenceTime={checkInReferenceTime}
+            onEnd={handleEndCheckIn}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -243,6 +319,14 @@ const AdminDashboard = () => {
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Button
+                onClick={() => setCheckInStartModalOpen(true)}
+                variant="outline"
+                className="h-12 border-2 border-blue-500 text-blue-600 hover:bg-blue-50"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                Check-in starten
+              </Button>
               <Button
                 variant="outline"
                 onClick={() => navigate('/admin/members')}
@@ -440,6 +524,13 @@ const AdminDashboard = () => {
         members={members}
         penaltyTypes={penaltyTypes}
         onCreditAdded={loadDashboardData}
+      />
+
+      {/* Check-in Start Modal */}
+      <CheckInStartModal
+        open={checkInStartModalOpen}
+        onOpenChange={setCheckInStartModalOpen}
+        onStart={handleStartCheckIn}
       />
     </div>
   );
