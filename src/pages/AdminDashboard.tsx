@@ -531,7 +531,7 @@ const AdminDashboard = () => {
                       onClick={loadMorePenalties}
                       disabled={loadingMore}
                     >
-                      {loadingMore ? 'Laden...' : `${pageSize} weitere laden`}
+                      {loadingMore ? 'Laden...' : `Weitere ${pageSize} laden`}
                     </Button>
                   </div>
                 )}

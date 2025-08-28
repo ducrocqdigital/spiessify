@@ -80,10 +80,13 @@ export const penaltyService = {
     
     const { data, error } = await query.range(offset, offset + limit - 1);
     
-    console.log('Query executed. Results:', {
+    console.log('Query executed with range:', {
+      offset,
+      limit,
+      rangeStart: offset,
+      rangeEnd: offset + limit - 1,
       dataLength: data?.length || 0,
-      error: error?.message || 'none',
-      firstItem: data?.[0] || 'none'
+      error: error?.message || 'none'
     });
     
     if (error) {
