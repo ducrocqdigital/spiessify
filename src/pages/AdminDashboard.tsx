@@ -58,6 +58,13 @@ const AdminDashboard = () => {
       return;
     }
     
+    // Reset filters on page load for fresh data
+    setFilters({
+      memberId: '',
+      category: 'all',
+      date: ''
+    });
+    
     // Check for active check-in session
     const savedCheckIn = localStorage.getItem('checkInSession');
     if (savedCheckIn) {
@@ -148,12 +155,20 @@ const AdminDashboard = () => {
     const newFilters = { ...filters, [key]: value };
     setFilters(newFilters);
     console.log('New filters:', newFilters);
-    setTimeout(() => loadFilteredPenalties(true), 0);
+    
+    // Reset pagination when filters change
+    setPenalties([]);
+    setHasMore(true);
+    
+    // Load filtered data with slight delay to ensure state is updated
+    setTimeout(() => loadFilteredPenalties(true), 50);
   };
 
   const handlePageSizeChange = (value: string) => {
     setPageSize(parseInt(value));
-    setTimeout(() => loadFilteredPenalties(true), 0);
+    setPenalties([]);
+    setHasMore(true);
+    setTimeout(() => loadFilteredPenalties(true), 50);
   };
 
   const clearFilters = () => {
@@ -162,7 +177,9 @@ const AdminDashboard = () => {
       category: 'all',
       date: ''
     });
-    setTimeout(() => loadFilteredPenalties(true), 0);
+    setPenalties([]);
+    setHasMore(true);
+    setTimeout(() => loadFilteredPenalties(true), 50);
   };
 
   const handleEditPenalty = async (id: string, updates: Partial<Penalty>) => {
