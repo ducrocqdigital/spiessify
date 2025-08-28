@@ -87,35 +87,35 @@ const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes 
           <div className="text-center text-muted-foreground py-8">Keine Strafen vorhanden</div>
         ) : (
           penalties.map((penalty) => (
-            <div key={penalty.id} className="border border-border rounded-lg p-4 bg-card hover:shadow-md transition-shadow">
-              <div className="flex items-start gap-4">
-                {/* Member Avatar */}
-                <Avatar className="h-12 w-12 shrink-0">
+            <div key={penalty.id} className="border border-border rounded-lg p-3 md:p-4 bg-card hover:shadow-md transition-shadow">
+              <div className="flex items-start gap-3">
+                {/* Member Avatar - smaller on mobile */}
+                <Avatar className="h-10 w-10 md:h-12 md:w-12 shrink-0">
                   <AvatarImage 
                     src={penalty.member?.profile_photo} 
                     alt={penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'} 
                   />
                   <AvatarFallback className="bg-primary/10 text-primary">
-                    <User className="h-6 w-6" />
+                    <User className="h-5 w-5 md:h-6 md:w-6" />
                   </AvatarFallback>
                 </Avatar>
                 
-                {/* Content */}
+                {/* Content - more compact on mobile */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-start justify-between gap-2 mb-2">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h4 className="font-medium text-card-foreground">
+                  <div className="flex flex-wrap items-start justify-between gap-1 md:gap-2 mb-1 md:mb-2">
+                    <div className="flex flex-wrap items-center gap-1 md:gap-2">
+                      <h4 className="font-medium text-card-foreground text-sm md:text-base">
                         {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
                       </h4>
-                      <Badge variant={getCategoryBadgeVariant(penalty.penalty_type?.category || '')}>
+                      <Badge variant={getCategoryBadgeVariant(penalty.penalty_type?.category || '')} className="text-xs">
                         {penalty.penalty_type?.category || 'Unbekannt'}
                       </Badge>
                     </div>
-                    <div className="text-lg font-bold text-primary">{penalty.amount}€</div>
+                    <div className="text-base md:text-lg font-bold text-primary">{penalty.amount}€</div>
                   </div>
                   
-                  <div className="text-sm text-muted-foreground space-y-1">
-                    <div className="font-medium text-card-foreground">
+                  <div className="text-xs md:text-sm text-muted-foreground space-y-0.5 md:space-y-1">
+                    <div className="font-medium text-card-foreground text-xs md:text-sm">
                       {penalty.penalty_type?.name || 'Unbekannt'}
                     </div>
                     <div className="flex items-center gap-2 text-xs">
@@ -125,20 +125,20 @@ const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes 
                       )}
                     </div>
                     {penalty.notes && (
-                      <div className="text-xs bg-muted p-2 rounded text-muted-foreground">
+                      <div className="text-xs bg-muted p-1.5 md:p-2 rounded text-muted-foreground">
                         {penalty.notes}
                       </div>
                     )}
                   </div>
                 </div>
                 
-                {/* Actions */}
+                {/* Actions - smaller on mobile */}
                 <div className="flex gap-1 shrink-0">
                   <Button
                     variant="outline"
                     size="sm"
                     onClick={() => openEditDialog(penalty)}
-                    className="h-8 w-8 p-0"
+                    className="h-7 w-7 md:h-8 md:w-8 p-0"
                   >
                     <Pencil className="w-3 h-3" />
                   </Button>
@@ -146,7 +146,7 @@ const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes 
                     variant="outline"
                     size="sm"
                     onClick={() => openDeleteDialog(penalty)}
-                    className="h-8 w-8 p-0 hover:border-destructive hover:text-destructive"
+                    className="h-7 w-7 md:h-8 md:w-8 p-0 hover:border-destructive hover:text-destructive"
                   >
                     <Trash2 className="w-3 h-3" />
                   </Button>
