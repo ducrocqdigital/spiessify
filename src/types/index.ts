@@ -112,9 +112,9 @@ export interface InspectionResult {
 }
 
 export interface InspectionData {
-  kopf: { [key: string]: 'neutral' | 'ok' | 'fehler' };
-  oberkoerper: { [key: string]: 'neutral' | 'ok' | 'fehler' };
-  unterkoerper: { [key: string]: 'neutral' | 'ok' | 'fehler' };
-  ausruestung: { [key: string]: 'neutral' | 'ok' | 'fehler' };
-  sonstiges: { [key: string]: 'neutral' | 'ok' | 'fehler' };
+  kopf: { [key: string]: number };
+  oberkoerper: { [key: string]: number };
+  unterkoerper: { [key: string]: number };
+  ausruestung: { [key: string]: number };
+  sonstiges: { [key: string]: number };
 }

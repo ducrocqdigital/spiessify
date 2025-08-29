@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { ArrowLeft, Check, X, Circle, User } from 'lucide-react';
+import { ArrowLeft, Check, X, Circle, User, Plus, Minus } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { INSPECTION_CATEGORIES } from '@/services/inspectionService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
@@ -29,11 +29,11 @@ export const InspectionDetailScreen = ({
   const [inspectionData, setInspectionData] = useState<InspectionData>(() => {
     // Initialize with default values if no initial data
     const defaultData: InspectionData = {
-      kopf: { hut: 'neutral', krawatte: 'neutral', frisur: 'neutral' },
-      oberkoerper: { jacke: 'neutral', hemd: 'neutral', abzeichen: 'neutral' },
-      unterkoerper: { hose: 'neutral', hosenstege: 'neutral', schuhe: 'neutral' },
-      ausruestung: { gewehr_saebel: 'neutral', handschuhe: 'neutral', schuetzenstock: 'neutral' },
-      sonstiges: { auftreten: 'neutral', benehmen: 'neutral' }
+      kopf: {},
+      oberkoerper: {},
+      unterkoerper: {},
+      ausruestung: {},
+      sonstiges: {}
     };
 
     // Merge with initial data if available
@@ -57,67 +57,28 @@ export const InspectionDetailScreen = ({
     loadAbnahmePenalties();
   }, []);
 
-  const toggleItemStatus = (category: keyof InspectionData, item: string) => {
-    const currentStatus = inspectionData[category][item] as InspectionStatus;
-    let nextStatus: InspectionStatus;
-    
-    switch (currentStatus) {
-      case 'neutral':
-        nextStatus = 'ok';
-        break;
-      case 'ok':
-        nextStatus = 'fehler';
-        break;
-      case 'fehler':
-        nextStatus = 'neutral';
-        break;
-      default:
-        nextStatus = 'ok';
-    }
+  const adjustMultiplier = (category: keyof InspectionData, item: string, adjustment: number) => {
+    const currentValue = (inspectionData[category] as any)[item] as number || 0;
+    const newValue = Math.max(0, currentValue + adjustment);
 
     setInspectionData(prev => ({
       ...prev,
       [category]: {
         ...prev[category],
-        [item]: nextStatus
+        [item]: newValue
       }
     }));
   };
 
-  const getStatusIcon = (status: InspectionStatus) => {
-    switch (status) {
-      case 'ok':
-        return <Check className="w-5 h-5 text-green-600" />;
-      case 'fehler':
-        return <X className="w-5 h-5 text-red-600" />;
-      case 'neutral':
-      default:
-        return <Circle className="w-5 h-5 text-gray-400" />;
-    }
+  const getMultiplier = (category: keyof InspectionData, item: string): number => {
+    return ((inspectionData[category] as any)[item] as number) || 0;
   };
 
-  const getStatusColor = (status: InspectionStatus) => {
-    switch (status) {
-      case 'ok':
-        return 'border-green-500 bg-green-50 hover:bg-green-100';
-      case 'fehler':
-        return 'border-red-500 bg-red-50 hover:bg-red-100';
-      case 'neutral':
-      default:
-        return 'border-gray-300 bg-white hover:bg-gray-50';
+  const getMultiplierColor = (multiplier: number) => {
+    if (multiplier > 0) {
+      return 'border-red-500 bg-red-50';
     }
-  };
-
-  const getStatusText = (status: InspectionStatus) => {
-    switch (status) {
-      case 'ok':
-        return 'OK';
-      case 'fehler':
-        return 'Fehler';
-      case 'neutral':
-      default:
-        return '';
-    }
+    return 'border-gray-300 bg-white';
   };
 
   const handleSave = () => {
@@ -167,31 +128,53 @@ export const InspectionDetailScreen = ({
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {abnahmePenalties.map((penalty) => {
-              // Use penalty id as the key for inspection data
-              const status = inspectionData.sonstiges[penalty.id] as InspectionStatus || 'neutral';
+              const multiplier = getMultiplier('sonstiges', penalty.id);
               
               return (
-                <button
+                <div
                   key={penalty.id}
-                  onClick={() => toggleItemStatus('sonstiges', penalty.id)}
                   className={`
-                    p-4 rounded-lg border-2 transition-all text-left
-                    ${getStatusColor(status)}
+                    p-4 rounded-lg border-2 transition-all
+                    ${getMultiplierColor(multiplier)}
                   `}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-3">
                     <div>
                       <div className="font-medium text-sm">{penalty.name}</div>
                       <div className="text-xs text-muted-foreground">{penalty.amount}€</div>
-                      {getStatusText(status) && (
-                        <div className="text-xs mt-1 font-medium">
-                          {getStatusText(status)}
+                      {multiplier > 0 && (
+                        <div className="text-xs mt-1 font-medium text-red-600">
+                          {multiplier}x = {(penalty.amount * multiplier).toFixed(2)}€
                         </div>
                       )}
                     </div>
-                    {getStatusIcon(status)}
+                    
+                    <div className="flex items-center justify-between gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => adjustMultiplier('sonstiges', penalty.id, -1)}
+                        disabled={multiplier <= 0}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </Button>
+                      
+                      <span className="font-medium text-sm min-w-[2rem] text-center">
+                        {multiplier}
+                      </span>
+                      
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => adjustMultiplier('sonstiges', penalty.id, 1)}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
-                </button>
+                </div>
               );
             })}
           </div>

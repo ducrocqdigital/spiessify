@@ -115,11 +115,11 @@ export const inspectionService = {
   // Initialize inspection result for a member
   async initializeMemberResult(sessionId: string, memberId: string): Promise<InspectionResult> {
     const initialData: InspectionData = {
-      kopf: { hut: 'neutral', krawatte: 'neutral', frisur: 'neutral' },
-      oberkoerper: { jacke: 'neutral', hemd: 'neutral', abzeichen: 'neutral' },
-      unterkoerper: { hose: 'neutral', hosenstege: 'neutral', schuhe: 'neutral' },
-      ausruestung: { gewehr_saebel: 'neutral', handschuhe: 'neutral', schuetzenstock: 'neutral' },
-      sonstiges: { auftreten: 'neutral', benehmen: 'neutral' }
+      kopf: {},
+      oberkoerper: {},
+      unterkoerper: {},
+      ausruestung: {},
+      sonstiges: {}
     };
 
     const { data, error } = await supabase
@@ -168,42 +168,40 @@ export const inspectionService = {
     inspectionData: InspectionData,
     penaltyCatalog: any[]
   ): Promise<void> {
-    const failures: string[] = [];
+    const penaltyPromises: Promise<void>[] = [];
     
-    // Collect all failures
+    // Process penalties with multipliers
     Object.entries(inspectionData).forEach(([categoryKey, categoryData]) => {
-      Object.entries(categoryData).forEach(([itemKey, status]) => {
-        if (status === 'fehler') {
-          const categoryName = INSPECTION_CATEGORIES[categoryKey as keyof typeof INSPECTION_CATEGORIES].name;
-          const itemName = INSPECTION_CATEGORIES[categoryKey as keyof typeof INSPECTION_CATEGORIES].items[itemKey];
-          failures.push(`${categoryName}: ${itemName}`);
+      Object.entries(categoryData).forEach(([itemKey, multiplier]) => {
+        const multiplierValue = multiplier as number;
+        if (multiplierValue > 0) {
+          // Find the penalty in catalog by ID (itemKey)
+          const matchingPenalty = penaltyCatalog.find(p => p.id === itemKey && p.is_active);
+          
+          if (matchingPenalty) {
+            // Create penalty with multiplier
+            const penaltyPromise = async (): Promise<void> => {
+              const { error } = await supabase
+                .from('penalties')
+                .insert({
+                  member_id: memberId,
+                  penalty_type_id: matchingPenalty.id,
+                  amount: matchingPenalty.amount,
+                  multiplier: multiplierValue,
+                  notes: `Musterung: ${matchingPenalty.name}`,
+                  date: new Date().toISOString().split('T')[0]
+                });
+
+              if (error) {
+                console.error('Failed to create penalty:', error);
+                throw error;
+              }
+            };
+            
+            penaltyPromises.push(penaltyPromise());
+          }
         }
       });
-    });
-
-    // Create penalties for each failure
-    const penaltyPromises = failures.map(async (failureDescription) => {
-      // Try to find matching penalty in catalog, or use default
-      const matchingPenalty = penaltyCatalog.find(p => 
-        p.category === 'abnahme' && p.is_active
-      ) || penaltyCatalog.find(p => p.is_active);
-
-      if (matchingPenalty) {
-        const { error } = await supabase
-          .from('penalties')
-          .insert({
-            member_id: memberId,
-            penalty_type_id: matchingPenalty.id,
-            amount: matchingPenalty.amount,
-            notes: `Musterung: ${failureDescription}`,
-            date: new Date().toISOString().split('T')[0]
-          });
-
-        if (error) {
-          console.error('Failed to create penalty:', error);
-          throw error;
-        }
-      }
     });
 
     await Promise.all(penaltyPromises);
