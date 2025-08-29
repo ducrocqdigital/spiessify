@@ -81,8 +81,12 @@ export const CheckInActiveScreen = ({ referenceTime, occasion, onEnd }: CheckInA
   };
 
   const handleMemberClick = (member: Member) => {
-    if (checkedMembers.some(cm => cm.memberId === member.id)) {
-      return; // Already checked
+    const isChecked = checkedMembers.some(cm => cm.memberId === member.id);
+    
+    if (isChecked) {
+      // Remove from checked members to reset to neutral
+      setCheckedMembers(prev => prev.filter(cm => cm.memberId !== member.id));
+      return;
     }
 
     const refDateTime = getReferenceDateTime();
@@ -125,7 +129,7 @@ export const CheckInActiveScreen = ({ referenceTime, occasion, onEnd }: CheckInA
           member_id: selectedMember.id,
           penalty_type_id: latePenalty.id,
           amount: penaltyAmount,
-          notes: `${occasion} - Check-in Verspätung: +${lateMinutes} Minuten`
+          notes: `${occasion}: +${lateMinutes} Min.`
         });
       } else {
         // If no penalty type found, we still need to create a record

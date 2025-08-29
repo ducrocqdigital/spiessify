@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ArrowLeft, Check, X, Circle, User } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { INSPECTION_CATEGORIES } from '@/services/inspectionService';
+import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { InspectionSession, Member, InspectionData } from '@/types';
 
 interface InspectionDetailScreenProps {
@@ -24,6 +25,7 @@ export const InspectionDetailScreen = ({
   onSave, 
   onBack 
 }: InspectionDetailScreenProps) => {
+  const [abnahmePenalties, setAbnahmePenalties] = useState<any[]>([]);
   const [inspectionData, setInspectionData] = useState<InspectionData>(() => {
     // Initialize with default values if no initial data
     const defaultData: InspectionData = {
@@ -41,6 +43,19 @@ export const InspectionDetailScreen = ({
     
     return defaultData;
   });
+
+  // Load Abnahme penalties on component mount
+  useEffect(() => {
+    const loadAbnahmePenalties = async () => {
+      try {
+        const penalties = await penaltyCatalogService.getByCategory('abnahme');
+        setAbnahmePenalties(penalties);
+      } catch (error) {
+        console.error('Failed to load abnahme penalties:', error);
+      }
+    };
+    loadAbnahmePenalties();
+  }, []);
 
   const toggleItemStatus = (category: keyof InspectionData, item: string) => {
     const currentStatus = inspectionData[category][item] as InspectionStatus;
@@ -144,46 +159,44 @@ export const InspectionDetailScreen = ({
         </div>
       </div>
 
-      {/* Inspection Categories */}
-      <div className="space-y-6">
-        {Object.entries(INSPECTION_CATEGORIES).map(([categoryKey, categoryData]) => (
-          <Card key={categoryKey}>
-            <CardHeader>
-              <CardTitle className="text-lg">{categoryData.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {Object.entries(categoryData.items).map(([itemKey, itemName]) => {
-                  const status = inspectionData[categoryKey as keyof InspectionData][itemKey] as InspectionStatus;
-                  
-                  return (
-                    <button
-                      key={itemKey}
-                      onClick={() => toggleItemStatus(categoryKey as keyof InspectionData, itemKey)}
-                      className={`
-                        p-4 rounded-lg border-2 transition-all text-left
-                        ${getStatusColor(status)}
-                      `}
-                    >
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <div className="font-medium text-sm">{itemName}</div>
-                          {getStatusText(status) && (
-                            <div className="text-xs mt-1 font-medium">
-                              {getStatusText(status)}
-                            </div>
-                          )}
+      {/* Abnahme Penalties */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Abnahme Strafen</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {abnahmePenalties.map((penalty) => {
+              // Use penalty id as the key for inspection data
+              const status = inspectionData.sonstiges[penalty.id] as InspectionStatus || 'neutral';
+              
+              return (
+                <button
+                  key={penalty.id}
+                  onClick={() => toggleItemStatus('sonstiges', penalty.id)}
+                  className={`
+                    p-4 rounded-lg border-2 transition-all text-left
+                    ${getStatusColor(status)}
+                  `}
+                >
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="font-medium text-sm">{penalty.name}</div>
+                      <div className="text-xs text-muted-foreground">{penalty.amount}€</div>
+                      {getStatusText(status) && (
+                        <div className="text-xs mt-1 font-medium">
+                          {getStatusText(status)}
                         </div>
-                        {getStatusIcon(status)}
-                      </div>
-                    </button>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+                      )}
+                    </div>
+                    {getStatusIcon(status)}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Actions */}
       <div className="flex gap-4 pt-6 border-t">

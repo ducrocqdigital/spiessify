@@ -107,6 +107,7 @@ export const LateArrivalModal = ({
                 value={customAmount}
                 onChange={(e) => handleAmountChange(e.target.value)}
                 className="flex-1"
+                inputMode="none"
               />
               <span className="text-sm text-muted-foreground">€</span>
             </div>
