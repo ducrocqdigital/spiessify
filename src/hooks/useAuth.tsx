@@ -31,9 +31,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log('Refreshing profile for user:', session.user.id);
         const profile = await authService.getCurrentUserProfile();
         console.log('Profile loaded:', profile);
+        if (!profile) {
+          console.error('No profile found for user - user may not be linked to a member record');
+        }
         setUserProfile(profile);
       } catch (error) {
         console.error('Error refreshing profile:', error);
+        console.error('Full error details:', error);
         setUserProfile(null);
       }
     } else {
