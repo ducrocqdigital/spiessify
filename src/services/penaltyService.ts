@@ -2,7 +2,37 @@ import { supabase } from '@/integrations/supabase/client';
 import { authService } from './authService';
 import { Penalty } from '@/types';
 
+// Add new secure public methods
+const securePublicMethods = {
+  // SECURE: Get recent penalties for public display (no sensitive data)
+  async getRecentPublic(limit: number = 10, offset: number = 0): Promise<any[]> {
+    const { data, error } = await supabase.rpc('get_recent_penalties_public', {
+      limit_count: limit,
+      offset_count: offset
+    });
+
+    if (error) throw error;
+    return data || [];
+  },
+
+  // SECURE: Get penalty statistics for public display
+  async getStatsPublic(): Promise<{ totalPenalties: number; totalAmount: number; uniqueDays: number }> {
+    const { data, error } = await supabase.rpc('get_public_penalty_stats');
+
+    if (error) throw error;
+    
+    const stats = data && data.length > 0 ? data[0] : { total_penalties: 0, total_amount: 0, unique_days: 0 };
+    return {
+      totalPenalties: Number(stats.total_penalties),
+      totalAmount: Number(stats.total_amount),
+      uniqueDays: Number(stats.unique_days)
+    };
+  },
+};
+
 export const penaltyService = {
+  // Add secure public methods
+  ...securePublicMethods,
   // Get all penalties with member information (only from active event)
   async getAll(): Promise<Penalty[]> {
     // First get the active event

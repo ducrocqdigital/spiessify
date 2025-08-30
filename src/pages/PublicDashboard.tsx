@@ -19,8 +19,8 @@ const PublicDashboard = () => {
   const { isAuthenticated, isOberadmin, isChargierte, signOut } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [members, setMembers] = useState<Member[]>([]);
-  const [penalties, setPenalties] = useState<Penalty[]>([]);
-  const [recentPenalties, setRecentPenalties] = useState<Penalty[]>([]);
+  const [penaltyStats, setPenaltyStats] = useState<{ totalPenalties: number; totalAmount: number; uniqueDays: number }>({ totalPenalties: 0, totalAmount: 0, uniqueDays: 0 });
+  const [recentPenalties, setRecentPenalties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -36,15 +36,27 @@ const PublicDashboard = () => {
 
   const loadData = async () => {
     try {
-      const [membersData, penaltiesData, recentPenaltiesData] = await Promise.all([
+      const [membersData, penaltyStatsData, recentPenaltiesData] = await Promise.all([
         memberService.getMembersWithStatsPublic(), // Use secure public function
-        penaltyService.getAll(),
-        penaltyService.getRecent(10, 0)
+        penaltyService.getStatsPublic(), // Use secure public function 
+        penaltyService.getRecentPublic(10, 0) // Use secure public function
       ]);
       
       setMembers(membersData);
-      setPenalties(penaltiesData);
-      setRecentPenalties(recentPenaltiesData);
+      setPenaltyStats(penaltyStatsData);
+      setRecentPenalties(recentPenaltiesData.map(p => ({
+        id: p.id,
+        amount: p.amount,
+        date: p.penalty_date,
+        created_time: p.created_time,
+        penalty_type: { name: p.penalty_type_name },
+        member: {
+          first_name: p.member_first_name,
+          last_name: p.member_last_name,
+          family_name_particle: p.member_family_name_particle,
+          nickname: p.member_nickname
+        }
+      })));
       setHasMore(recentPenaltiesData.length === 10);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
@@ -58,8 +70,21 @@ const PublicDashboard = () => {
     
     setLoadingMore(true);
     try {
-      const morePenalties = await penaltyService.getRecent(10, recentPenalties.length);
-      setRecentPenalties(prev => [...prev, ...morePenalties]);
+      const morePenalties = await penaltyService.getRecentPublic(10, recentPenalties.length);
+      const formattedPenalties = morePenalties.map(p => ({
+        id: p.id,
+        amount: p.amount,
+        date: p.penalty_date,
+        created_time: p.created_time,
+        penalty_type: { name: p.penalty_type_name },
+        member: {
+          first_name: p.member_first_name,
+          last_name: p.member_last_name,
+          family_name_particle: p.member_family_name_particle,
+          nickname: p.member_nickname
+        }
+      } as any));
+      setRecentPenalties(prev => [...prev, ...formattedPenalties]);
       setHasMore(morePenalties.length === 10);
     } catch (error) {
       console.error('Failed to load more penalties:', error);
@@ -161,7 +186,7 @@ const PublicDashboard = () => {
           <Card>
             <CardContent className="p-4 text-center">
               <Filter className="w-8 h-8 mx-auto text-primary mb-2" />
-              <div className="text-2xl font-bold">{loading ? '...' : penalties.length}</div>
+              <div className="text-2xl font-bold">{loading ? '...' : penaltyStats.totalPenalties}</div>
               <div className="text-sm text-muted-foreground">Strafen</div>
             </CardContent>
           </Card>
@@ -169,7 +194,7 @@ const PublicDashboard = () => {
             <CardContent className="p-4 text-center">
               <Euro className="w-8 h-8 mx-auto text-primary mb-2" />
               <div className="text-2xl font-bold">
-                {loading ? '...' : `${penalties.reduce((sum, p) => sum + Number(p.amount), 0)}€`}
+                {loading ? '...' : `${penaltyStats.totalAmount}€`}
               </div>
               <div className="text-sm text-muted-foreground">Gesamt</div>
             </CardContent>
@@ -178,7 +203,7 @@ const PublicDashboard = () => {
             <CardContent className="p-4 text-center">
               <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
               <div className="text-2xl font-bold">
-                {loading ? '...' : new Set(penalties.map(p => p.date)).size}
+                {loading ? '...' : penaltyStats.uniqueDays}
               </div>
               <div className="text-sm text-muted-foreground">Tage</div>
             </CardContent>

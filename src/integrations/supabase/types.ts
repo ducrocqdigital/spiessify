@@ -361,6 +361,28 @@ export type Database = {
           total_penalties: number
         }[]
       }
+      get_public_penalty_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          total_amount: number
+          total_penalties: number
+          unique_days: number
+        }[]
+      }
+      get_recent_penalties_public: {
+        Args: { limit_count?: number; offset_count?: number }
+        Returns: {
+          amount: number
+          created_time: string
+          id: string
+          member_family_name_particle: string
+          member_first_name: string
+          member_last_name: string
+          member_nickname: string
+          penalty_date: string
+          penalty_type_name: string
+        }[]
+      }
       get_user_profile: {
         Args: { _user_id: string }
         Returns: {
