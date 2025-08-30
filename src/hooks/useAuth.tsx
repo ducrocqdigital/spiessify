@@ -28,13 +28,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshProfile = async () => {
     if (session?.user) {
       try {
+        console.log('Refreshing profile for user:', session.user.id);
         const profile = await authService.getCurrentUserProfile();
+        console.log('Profile loaded:', profile);
         setUserProfile(profile);
       } catch (error) {
         console.error('Error refreshing profile:', error);
         setUserProfile(null);
       }
     } else {
+      console.log('No session user, clearing profile');
       setUserProfile(null);
     }
   };
