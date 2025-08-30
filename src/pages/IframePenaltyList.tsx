@@ -71,7 +71,7 @@ const IframePenaltyList = () => {
                       {index + 1}
                     </div>
                     <span className="font-medium text-foreground">
-                      {memberService.getDisplayName(item.member)}
+                      {memberService.getPublicDisplayName(item.member)}
                     </span>
                   </div>
                   <div className="text-right">
@@ -106,7 +106,7 @@ const IframePenaltyList = () => {
               <div key={penalty.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg hover:shadow-sm transition-shadow">
                 <div className="flex-1">
                   <div className="font-medium text-foreground text-lg">
-                    {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
+                    {penalty.member ? memberService.getPublicDisplayName(penalty.member) : 'Unbekannt'}
                   </div>
                   <div className="flex items-center gap-3 mt-2">
                     <Badge variant="outline" className="text-xs">

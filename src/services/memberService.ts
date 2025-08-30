@@ -103,11 +103,23 @@ export const memberService = {
   },
 
   // Get member display name (nickname or first+last name)
-getDisplayName(member: Member): string {
+  getDisplayName(member: Member): string {
     if (member.nickname) return member.nickname;
     
     const particle = member.family_name_particle ? ` ${member.family_name_particle}` : '';
     return `${member.first_name}${particle} ${member.last_name}`;
+  },
+
+  // Get public display name (abbreviated last name and particle)
+  getPublicDisplayName(member: Member): string {
+    if (member.nickname) return member.nickname;
+    
+    const abbreviatedLastName = member.last_name.charAt(0) + '.';
+    const abbreviatedParticle = member.family_name_particle 
+      ? ` ${member.family_name_particle.charAt(0)}.` 
+      : '';
+    
+    return `${member.first_name}${abbreviatedParticle} ${abbreviatedLastName}`;
   },
 
   getFullName(member: Member): string {

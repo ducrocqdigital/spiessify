@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn, Settings } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
-import { userService } from '@/services/userService';
 import { Member, Penalty } from '@/types';
 import { formatDateTime } from '@/utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
@@ -145,7 +144,8 @@ const PublicDashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        <EventHeader />
+        {/* Only show EventHeader for authenticated users */}
+        {isAuthenticated && <EventHeader />}
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
@@ -205,7 +205,7 @@ const PublicDashboard = () => {
                     <div className="flex items-center gap-4">
                       {getPositionIcon(index)}
                       <div>
-                        <div className="font-medium">{memberService.getDisplayName(member)}</div>
+                        <div className="font-medium">{memberService.getPublicDisplayName(member)}</div>
                         <div className="text-sm text-muted-foreground">
                           {member.totalPenalties || 0} Strafen
                         </div>
@@ -245,7 +245,7 @@ const PublicDashboard = () => {
                     <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                       <div>
                         <div className="font-medium">
-                          {penalty.member ? memberService.getDisplayName(penalty.member) : 'Unbekannt'}
+                          {penalty.member ? memberService.getPublicDisplayName(penalty.member) : 'Unbekannt'}
                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Badge variant="outline" className="text-xs">
@@ -253,11 +253,6 @@ const PublicDashboard = () => {
                           </Badge>
                           <span>{formatDateTime(penalty.created_time || penalty.date)}</span>
                         </div>
-                        {penalty.assigned_by_user_id && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            <AssignedByDisplay penaltyId={penalty.id} assignedByUserId={penalty.assigned_by_user_id} />
-                          </div>
-                        )}
                         {penalty.notes && (
                           <div className="text-xs text-muted-foreground mt-1">
                             {penalty.notes}
@@ -287,39 +282,6 @@ const PublicDashboard = () => {
         </Card>
       </div>
     </div>
-  );
-};
-
-// Component to display who assigned the penalty
-const AssignedByDisplay = ({ penaltyId, assignedByUserId }: { penaltyId: string; assignedByUserId: string }) => {
-  const [assignedBy, setAssignedBy] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchAssignedBy = async () => {
-      try {
-        const userData = await userService.getAssignedByInfo({ id: penaltyId, assigned_by_user_id: assignedByUserId } as Penalty);
-        setAssignedBy(userData);
-      } catch (error) {
-        console.error('Error fetching assigned-by info:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchAssignedBy();
-  }, [penaltyId, assignedByUserId]);
-
-  if (loading) {
-    return <span>Laden...</span>;
-  }
-
-  if (!assignedBy) {
-    return <span>Vergeben von: Unbekannt</span>;
-  }
-
-  return (
-    <span>Vergeben von: {memberService.getDisplayName(assignedBy)}</span>
   );
 };
 
