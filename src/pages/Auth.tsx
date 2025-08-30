@@ -187,8 +187,9 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-1">
+              <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="login">Anmelden</TabsTrigger>
+                <TabsTrigger value="signup">Registrieren</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login" className="space-y-4">
@@ -292,6 +293,74 @@ const Auth = () => {
                     </div>
                   </form>
                 )}
+              </TabsContent>
+              
+              <TabsContent value="signup" className="space-y-4">
+                <form onSubmit={handleSignup} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signupEmail">E-Mail</Label>
+                    <Input
+                      id="signupEmail"
+                      type="email"
+                      placeholder="ihre.email@beispiel.de"
+                      required
+                      value={signupForm.email}
+                      onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
+                    />
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="signupPassword">Passwort</Label>
+                    <Input
+                      id="signupPassword"
+                      type="password"
+                      required
+                      value={signupForm.password}
+                      onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      required
+                      value={signupForm.confirmPassword}
+                      onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="memberSelect">Mitgliedsprofil</Label>
+                    <Select
+                      value={signupForm.memberId}
+                      onValueChange={(value) => setSignupForm({ ...signupForm, memberId: value })}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Wählen Sie Ihr Mitgliedsprofil" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {eligibleMembers.map((member) => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.first_name} {member.last_name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {error && (
+                    <Alert variant="destructive">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertDescription>{error}</AlertDescription>
+                    </Alert>
+                  )}
+
+                  <Button type="submit" className="w-full" disabled={submitting}>
+                    {submitting ? 'Registrieren...' : 'Registrieren'}
+                  </Button>
+                </form>
               </TabsContent>
             </Tabs>
           </CardContent>
