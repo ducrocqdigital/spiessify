@@ -31,8 +31,8 @@ const App = () => (
         <BrowserRouter>
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<PublicDashboard />} />
-              <Route path="/dashboard" element={<Navigate to="/" replace />} />
+              <Route path="/" element={<Index />} />
+              <Route path="/dashboard" element={<PublicDashboard />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin-login" element={<Navigate to="/auth" replace />} />
               <Route path="/admin" element={

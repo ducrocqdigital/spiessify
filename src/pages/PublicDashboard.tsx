@@ -26,13 +26,8 @@ const PublicDashboard = () => {
   const [hasMore, setHasMore] = useState(true);
 
   useEffect(() => {
-    // Redirect authenticated chargierten/admins to admin area
-    if (isAuthenticated && (isChargierte || isOberadmin)) {
-      navigate('/admin', { replace: true });
-      return;
-    }
     loadData();
-  }, [isAuthenticated, isChargierte, isOberadmin, navigate]);
+  }, []);
 
   const loadData = async () => {
     try {
