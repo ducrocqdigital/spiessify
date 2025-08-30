@@ -445,21 +445,13 @@ const AdminDashboard = () => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
               <Button
                 onClick={() => navigate('/add-penalty')}
                 className="h-16 text-lg bg-gradient-to-r from-primary to-primary-glow"
               >
                 <PlusCircle className="w-6 h-6 mr-3" />
                 Neue Strafe hinzufügen
-              </Button>
-              <Button
-                onClick={() => setCreditDialogOpen(true)}
-                variant="outline"
-                className="h-16 text-lg border-2 border-green-500 text-green-600 hover:bg-green-50"
-              >
-                <Minus className="w-6 h-6 mr-3" />
-                Gutschrift hinzufügen
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -480,11 +472,12 @@ const AdminDashboard = () => {
                 Musterung starten
               </Button>
               <Button
+                onClick={() => setCreditDialogOpen(true)}
                 variant="outline"
-                onClick={() => navigate('/events')}
-                className="h-12"
+                className="h-12 border-2 border-green-500 text-green-600 hover:bg-green-50"
               >
-                Veranstaltungen
+                <Minus className="w-4 h-4 mr-2" />
+                Gutschrift hinzufügen
               </Button>
             </div>
           </CardContent>

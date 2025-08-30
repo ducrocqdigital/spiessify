@@ -29,15 +29,6 @@ const PublicDashboard = () => {
     loadData();
   }, []);
 
-  // Debug-Log für Auth-Status
-  useEffect(() => {
-    console.log('Auth Status:', { 
-      isAuthenticated, 
-      isOberadmin, 
-      isChargierte 
-    });
-  }, [isAuthenticated, isOberadmin, isChargierte]);
-
   const loadData = async () => {
     try {
       const [membersData, penaltiesData, recentPenaltiesData] = await Promise.all([
