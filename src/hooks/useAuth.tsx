@@ -14,7 +14,7 @@ interface AuthContextType {
   signIn: (credentials: { email: string; password: string }) => Promise<void>;
   signUp: (credentials: { email: string; password: string; memberId: string }) => Promise<void>;
   signOut: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
+  refreshProfile: (sessionToUse?: Session | null) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -25,10 +25,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshProfile = async () => {
-    if (session?.user) {
+  const refreshProfile = async (sessionToUse?: Session | null) => {
+    const currentSession = sessionToUse || session;
+    if (currentSession?.user) {
       try {
-        console.log('Refreshing profile for user:', session.user.id);
+        console.log('Refreshing profile for user:', currentSession.user.id);
         const profile = await authService.getCurrentUserProfile();
         console.log('Profile loaded:', profile);
         if (!profile) {
@@ -41,7 +42,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUserProfile(null);
       }
     } else {
-      console.log('No session user, clearing profile');
+      console.log('No session user, clearing profile - session:', !!currentSession, 'user:', !!currentSession?.user);
       setUserProfile(null);
     }
   };
@@ -57,7 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           console.log('Session user found, setting timeout to refresh profile');
           setTimeout(async () => {
-            await refreshProfile();
+            await refreshProfile(session);
           }, 0);
         } else {
           console.log('No session user, clearing profile');
@@ -76,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       if (session?.user) {
         console.log('Initial session user found, refreshing profile');
-        refreshProfile().finally(() => setLoading(false));
+        refreshProfile(session).finally(() => setLoading(false));
       } else {
         console.log('No initial session user found');
         setLoading(false);

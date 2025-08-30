@@ -32,6 +32,7 @@ const App = () => (
           <ErrorBoundary>
             <Routes>
               <Route path="/" element={<PublicDashboard />} />
+              <Route path="/dashboard" element={<Navigate to="/" replace />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="chargierte">
