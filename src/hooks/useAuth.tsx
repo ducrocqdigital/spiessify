@@ -50,14 +50,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = authService.onAuthStateChange(
       async (event, session) => {
+        console.log('Auth state change event:', event, 'Session:', !!session);
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          console.log('Session user found, setting timeout to refresh profile');
           setTimeout(async () => {
             await refreshProfile();
           }, 0);
         } else {
+          console.log('No session user, clearing profile');
           setUserProfile(null);
         }
         
@@ -67,12 +70,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Get initial session
     authService.getCurrentSession().then((session) => {
+      console.log('Initial session check:', !!session);
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
+        console.log('Initial session user found, refreshing profile');
         refreshProfile().finally(() => setLoading(false));
       } else {
+        console.log('No initial session user found');
         setLoading(false);
       }
     });
