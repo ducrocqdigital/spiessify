@@ -163,9 +163,8 @@ const Auth = () => {
           </CardHeader>
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="grid w-full grid-cols-2">
+              <TabsList className="grid w-full grid-cols-1">
                 <TabsTrigger value="login">Anmelden</TabsTrigger>
-                <TabsTrigger value="signup">Registrieren</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login" className="space-y-4">
@@ -226,99 +225,6 @@ const Auth = () => {
 
                   <Button type="submit" className="w-full" disabled={submitting}>
                     {submitting ? 'Anmelden...' : 'Anmelden'}
-                  </Button>
-                </form>
-              </TabsContent>
-
-              <TabsContent value="signup" className="space-y-4">
-                <form onSubmit={handleSignup} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-member">Mitgliedsprofil auswählen</Label>
-                    <Select
-                      value={signupForm.memberId}
-                      onValueChange={(value) => setSignupForm({ ...signupForm, memberId: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Wählen Sie Ihr Profil" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {eligibleMembers.map((member) => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {memberService.getFullName(member)} ({member.rank})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">E-Mail</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="ihre.email@beispiel.de"
-                      required
-                      value={signupForm.email}
-                      onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
-                    />
-                  </div>
-                  
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Passwort</Label>
-                    <div className="relative">
-                      <Input
-                        id="signup-password"
-                        type={showPassword ? 'text' : 'password'}
-                        required
-                        minLength={6}
-                        value={signupForm.password}
-                        onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
-                      />
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                        onClick={() => setShowPassword(!showPassword)}
-                      >
-                        {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-password">Passwort bestätigen</Label>
-                    <Input
-                      id="confirm-password"
-                      type={showPassword ? 'text' : 'password'}
-                      required
-                      value={signupForm.confirmPassword}
-                      onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="signup-remember"
-                      checked={signupForm.rememberMe}
-                      onCheckedChange={(checked) => 
-                        setSignupForm({ ...signupForm, rememberMe: checked as boolean })
-                      }
-                    />
-                    <Label htmlFor="signup-remember" className="text-sm">
-                      Angemeldet bleiben (7 Tage)
-                    </Label>
-                  </div>
-
-                  {error && (
-                    <Alert variant="destructive">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertDescription>{error}</AlertDescription>
-                    </Alert>
-                  )}
-
-                  <Button type="submit" className="w-full" disabled={submitting}>
-                    {submitting ? 'Registrieren...' : 'Registrieren'}
                   </Button>
                 </form>
               </TabsContent>
