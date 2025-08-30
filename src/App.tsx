@@ -7,7 +7,7 @@ import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
 import UserManagement from "./pages/UserManagement";
 import Auth from "./pages/Auth";
-import AdminLogin from "./pages/AdminLogin";
+
 import AdminDashboard from "./pages/AdminDashboard";
 import MemberManagement from "./pages/MemberManagement";
 import PenaltyCatalogManagement from "./pages/PenaltyCatalogManagement";
@@ -31,9 +31,8 @@ const App = () => (
         <BrowserRouter>
           <ErrorBoundary>
             <Routes>
-              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/" element={<PublicDashboard />} />
               <Route path="/auth" element={<Auth />} />
-              <Route path="/admin-login" element={<AdminLogin />} />
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="chargierte">
                   <AdminDashboard />
@@ -59,7 +58,7 @@ const App = () => (
                   <AddPenalty />
                 </ProtectedRoute>
               } />
-              <Route path="/dashboard" element={<PublicDashboard />} />
+              
               <Route path="/iframe/penalties" element={<IframePenaltyList />} />
               <Route path="/events" element={
                 <ProtectedRoute requiredRole="oberadmin">
