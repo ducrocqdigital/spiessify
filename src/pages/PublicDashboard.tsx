@@ -3,15 +3,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, Medal, Award, Filter, Users, Euro, Calendar } from 'lucide-react';
+import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
 import { Member, Penalty } from '@/types';
 import { formatDateTime } from '@/utils/dateUtils';
+import { useNavigate } from 'react-router-dom';
+import { EventHeader } from '@/components/EventHeader';
 
 type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
 
 const PublicDashboard = () => {
+  const navigate = useNavigate();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [members, setMembers] = useState<Member[]>([]);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
@@ -95,16 +98,27 @@ const PublicDashboard = () => {
       {/* Header */}
       <div className="bg-gradient-to-r from-primary to-primary-glow text-primary-foreground">
         <div className="container mx-auto px-4 py-6">
-          <div className="text-center">
-            <h1 className="text-3xl font-bold mb-2">Schützen Rangliste</h1>
-            <p className="text-primary-foreground/80">
-              Wer hat die meisten Strafen gesammelt?
-            </p>
+          <div className="flex justify-between items-center">
+            <div className="text-center flex-1">
+              <h1 className="text-3xl font-bold mb-2">Spießify</h1>
+              <p className="text-primary-foreground/80">
+                Wer hat die meisten Strafen gesammelt?
+              </p>
+            </div>
+            <Button
+              variant="outline-inverse"
+              onClick={() => navigate('/admin-login')}
+              className="flex items-center gap-2"
+            >
+              <LogIn className="w-4 h-4" />
+              Login (Chargierte)
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
+        <EventHeader />
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
