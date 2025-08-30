@@ -118,3 +118,14 @@ export interface InspectionData {
   ausruestung: { [key: string]: number };
   sonstiges: { [key: string]: number };
 }
+
+export interface Event {
+  id: string;
+  name: string;
+  start_date: string;
+  end_date: string;
+  notes?: string;
+  is_archived: boolean;
+  created_at: string;
+  updated_at: string;
+}

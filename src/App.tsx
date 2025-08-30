@@ -13,6 +13,7 @@ import PenaltyManagement from "./pages/PenaltyManagement";
 import AddPenalty from "./pages/AddPenalty";
 import PublicDashboard from "./pages/PublicDashboard";
 import IframePenaltyList from "./pages/IframePenaltyList";
+import { EventManagement } from "./pages/EventManagement";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/add-penalty" element={<AddPenalty />} />
             <Route path="/dashboard" element={<PublicDashboard />} />
             <Route path="/iframe/penalties" element={<IframePenaltyList />} />
+            <Route path="/events" element={<EventManagement />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

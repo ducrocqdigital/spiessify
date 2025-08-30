@@ -157,6 +157,7 @@ export const penaltyService = {
     notes?: string;
     location_latitude?: number;
     location_longitude?: number;
+    event_id?: string;
   }): Promise<Penalty> {
     const { data, error } = await supabase
       .from('penalties')

@@ -46,7 +46,7 @@ export const INSPECTION_CATEGORIES = {
 
 export const inspectionService = {
   // Start a new inspection session
-  async startSession(anlass: string): Promise<InspectionSession> {
+  async startSession(anlass: string, eventId?: string): Promise<InspectionSession> {
     // End any existing active session first
     await this.endActiveSession();
     
@@ -54,7 +54,8 @@ export const inspectionService = {
       .from('inspection_sessions')
       .insert({
         anlass,
-        is_active: true
+        is_active: true,
+        event_id: eventId
       })
       .select()
       .single();
@@ -189,7 +190,8 @@ export const inspectionService = {
                   amount: matchingPenalty.amount,
                   multiplier: multiplierValue,
                   notes: `Musterung: ${matchingPenalty.name}`,
-                  date: new Date().toISOString().split('T')[0]
+                  date: new Date().toISOString().split('T')[0],
+                  event_id: penaltyCatalog.find(p => p.id === itemKey)?.event_id
                 });
 
               if (error) {

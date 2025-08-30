@@ -20,7 +20,10 @@ import { CheckInActiveScreen } from '@/components/CheckInActiveScreen';
 import { InspectionStartModal } from '@/components/InspectionStartModal';
 import { InspectionActiveScreen } from '@/components/InspectionActiveScreen';
 import { inspectionService } from '@/services/inspectionService';
-import { InspectionSession } from '@/types';
+import { eventService } from '@/services/eventService';
+import { InspectionSession, Event } from '@/types';
+import { EventHeader } from '@/components/EventHeader';
+import { NoEventModal } from '@/components/NoEventModal';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -53,6 +56,10 @@ const AdminDashboard = () => {
   const [inspectionActive, setInspectionActive] = useState(false);
   const [inspectionStartModalOpen, setInspectionStartModalOpen] = useState(false);
   const [activeInspectionSession, setActiveInspectionSession] = useState<InspectionSession | null>(null);
+  
+  // Event state
+  const [noEventModalOpen, setNoEventModalOpen] = useState(false);
+  const [activeEvent, setActiveEvent] = useState<Event | null>(null);
   
   // Filters
   const [filters, setFilters] = useState({
@@ -253,7 +260,14 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleStartCheckIn = (referenceTime: string, occasion: string) => {
+  const handleStartCheckIn = async (referenceTime: string, occasion: string) => {
+    // Check for active event
+    const activeEvent = await eventService.getActiveEvent();
+    if (!activeEvent) {
+      setNoEventModalOpen(true);
+      return;
+    }
+    
     setCheckInActive(true);
     setCheckInReferenceTime(referenceTime);
     setCheckInOccasion(occasion);
@@ -284,7 +298,14 @@ const AdminDashboard = () => {
 
   const handleStartInspection = async (anlass: string) => {
     try {
-      const session = await inspectionService.startSession(anlass);
+      // Check for active event
+      const activeEvent = await eventService.getActiveEvent();
+      if (!activeEvent) {
+        setNoEventModalOpen(true);
+        return;
+      }
+      
+      const session = await inspectionService.startSession(anlass, activeEvent.id);
       setInspectionActive(true);
       setActiveInspectionSession(session);
       toast({
@@ -409,6 +430,9 @@ const AdminDashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
+        {/* Event Header */}
+        <EventHeader />
+        
         {/* Quick Actions */}
         <Card>
           <CardHeader>
@@ -454,10 +478,10 @@ const AdminDashboard = () => {
               </Button>
               <Button
                 variant="outline"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/events')}
                 className="h-12"
               >
-                Öffentliche Rangliste
+                Veranstaltungen
               </Button>
             </div>
           </CardContent>
@@ -699,6 +723,16 @@ const AdminDashboard = () => {
         open={inspectionStartModalOpen}
         onOpenChange={setInspectionStartModalOpen}
         onStart={handleStartInspection}
+      />
+
+      {/* No Event Modal */}
+      <NoEventModal
+        isOpen={noEventModalOpen}
+        onClose={() => setNoEventModalOpen(false)}
+        onCreateEvent={() => {
+          setNoEventModalOpen(false);
+          navigate('/events');
+        }}
       />
     </div>
   );
