@@ -149,8 +149,6 @@ const PublicDashboard = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 space-y-6">
-        {/* Only show EventHeader for authenticated users */}
-        {isAuthenticated && <EventHeader />}
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card>
