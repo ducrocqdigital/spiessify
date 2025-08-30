@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      events: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          is_archived: boolean
+          name: string
+          notes: string | null
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          is_archived?: boolean
+          name: string
+          notes?: string | null
+          start_date: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          is_archived?: boolean
+          name?: string
+          notes?: string | null
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       inspection_results: {
         Row: {
           created_at: string
@@ -64,6 +97,7 @@ export type Database = {
           anlass: string
           created_at: string
           end_time: string | null
+          event_id: string | null
           id: string
           is_active: boolean
           start_time: string
@@ -73,6 +107,7 @@ export type Database = {
           anlass: string
           created_at?: string
           end_time?: string | null
+          event_id?: string | null
           id?: string
           is_active?: boolean
           start_time?: string
@@ -82,12 +117,21 @@ export type Database = {
           anlass?: string
           created_at?: string
           end_time?: string | null
+          event_id?: string | null
           id?: string
           is_active?: boolean
           start_time?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "inspection_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       members: {
         Row: {
@@ -143,6 +187,7 @@ export type Database = {
           created_at: string
           created_time: string | null
           date: string
+          event_id: string | null
           id: string
           location_latitude: number | null
           location_longitude: number | null
@@ -157,6 +202,7 @@ export type Database = {
           created_at?: string
           created_time?: string | null
           date?: string
+          event_id?: string | null
           id?: string
           location_latitude?: number | null
           location_longitude?: number | null
@@ -171,6 +217,7 @@ export type Database = {
           created_at?: string
           created_time?: string | null
           date?: string
+          event_id?: string | null
           id?: string
           location_latitude?: number | null
           location_longitude?: number | null
@@ -181,6 +228,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "penalties_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "penalties_member_id_fkey"
             columns: ["member_id"]
@@ -238,7 +292,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_active_event: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          created_at: string
+          end_date: string
+          id: string
+          is_archived: boolean
+          name: string
+          notes: string
+          start_date: string
+          updated_at: string
+        }[]
+      }
     }
     Enums: {
       member_rank:
