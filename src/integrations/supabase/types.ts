@@ -379,6 +379,10 @@ export type Database = {
         Args: { _is_oberadmin?: boolean; _member_id: string; _user_id: string }
         Returns: undefined
       }
+      user_can_manage_members: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
     }
     Enums: {
       member_rank:
