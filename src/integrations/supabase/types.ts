@@ -360,6 +360,10 @@ export type Database = {
         Args: { _role: string; _user_id: string }
         Returns: boolean
       }
+      link_user_to_member_on_signup: {
+        Args: { _is_oberadmin?: boolean; _member_id: string; _user_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       member_rank:

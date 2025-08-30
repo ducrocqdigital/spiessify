@@ -139,13 +139,8 @@ const UserManagement = () => {
 
       if (error) throw error;
 
-      // Link user to member
-      await authService.linkUserToMember(data.user.id, createForm.memberId);
-      
-      // Set Oberadmin status if selected
-      if (createForm.isOberadmin) {
-        await authService.updateUserRole(data.user.id, true);
-      }
+      // Link user to member with appropriate role
+      await authService.linkUserToMember(data.user.id, createForm.memberId, createForm.isOberadmin);
 
       toast({
         title: "Benutzer erstellt",

@@ -41,8 +41,17 @@ class AuthService {
     if (error) throw error;
 
     // Link the user to the member profile
+    // For the first signup, check if this should be an oberadmin
     if (data.user && !error) {
-      await this.linkUserToMember(data.user.id, memberId);
+      // Check if any oberadmin exists yet
+      const { data: existingOberadmin } = await supabase
+        .from('user_roles')
+        .select('id')
+        .eq('is_oberadmin', true)
+        .limit(1);
+      
+      const isFirstOberadmin = !existingOberadmin || existingOberadmin.length === 0;
+      await this.linkUserToMember(data.user.id, memberId, isFirstOberadmin);
     }
 
     return data;
@@ -88,14 +97,12 @@ class AuthService {
     };
   }
 
-  async linkUserToMember(userId: string, memberId: string) {
-    const { error } = await supabase
-      .from('user_roles')
-      .insert({
-        user_id: userId,
-        member_id: memberId,
-        is_oberadmin: false
-      });
+  async linkUserToMember(userId: string, memberId: string, isOberadmin: boolean = false) {
+    const { error } = await supabase.rpc('link_user_to_member_on_signup', {
+      _user_id: userId,
+      _member_id: memberId,
+      _is_oberadmin: isOberadmin
+    });
 
     if (error) throw error;
   }
