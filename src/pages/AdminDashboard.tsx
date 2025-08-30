@@ -629,13 +629,14 @@ const AdminDashboard = () => {
               <div className="text-center text-muted-foreground py-8">Laden...</div>
             ) : (
               <>
-                <PenaltyTable
-                  penalties={penalties}
-                  onEdit={handleEditPenalty}
-                  onDelete={handleDeletePenalty}
-                  members={members}
-                  penaltyTypes={penaltyTypes}
-                />
+          <PenaltyTable
+            penalties={penalties}
+            onEdit={handleEditPenalty}
+            onDelete={handleDeletePenalty}
+            members={members}
+            penaltyTypes={penaltyTypes}
+            showAssignedBy={true}
+          />
                 {hasMore && (
                   <div className="mt-6 text-center">
                     <Button 

@@ -44,7 +44,7 @@ export const CheckInStartModal = ({ open, onOpenChange, onStart }: CheckInStartM
             <Input
               id="occasion"
               type="text"
-              placeholder="z.B. Trainingsschießen, Wettkampf..."
+              placeholder="z.B. Biwak"
               value={occasion}
               onChange={(e) => setOccasion(e.target.value)}
             />

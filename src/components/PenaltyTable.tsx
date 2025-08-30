@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Penalty } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -11,6 +11,8 @@ import { Pencil, Trash2, MapPin, User } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatDateTime } from '@/utils/dateUtils';
 import { memberService } from '@/services/memberService';
+import { userService } from '@/services/userService';
+import { useAuth } from '@/hooks/useAuth';
 
 interface PenaltyTableProps {
   penalties: Penalty[];
@@ -18,9 +20,11 @@ interface PenaltyTableProps {
   onDelete: (id: string) => Promise<void>;
   members?: any[];
   penaltyTypes?: any[];
+  showAssignedBy?: boolean;
 }
 
-const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes = [] }: PenaltyTableProps) => {
+const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes = [], showAssignedBy = false }: PenaltyTableProps) => {
+  const { isOberadmin, isChargierte } = useAuth();
   const [editDialog, setEditDialog] = useState<{ penalty: Penalty | null; open: boolean }>({ penalty: null, open: false });
   const [deleteDialog, setDeleteDialog] = useState<{ penalty: Penalty | null; open: boolean }>({ penalty: null, open: false });
   const [editForm, setEditForm] = useState({
@@ -317,6 +321,42 @@ const PenaltyTable = ({ penalties, onEdit, onDelete, members = [], penaltyTypes 
         </DialogContent>
       </Dialog>
     </>
+  );
+};
+
+// Component to display who assigned the penalty
+const AssignedByCell = ({ penalty }: { penalty: Penalty }) => {
+  const [assignedBy, setAssignedBy] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAssignedBy = async () => {
+      if (penalty.assigned_by_user_id) {
+        try {
+          const userData = await userService.getAssignedByInfo(penalty);
+          setAssignedBy(userData);
+        } catch (error) {
+          console.error('Error fetching assigned-by info:', error);
+        }
+      }
+      setLoading(false);
+    };
+
+    fetchAssignedBy();
+  }, [penalty.assigned_by_user_id]);
+
+  if (loading) {
+    return <span className="text-xs text-muted-foreground">Laden...</span>;
+  }
+
+  if (!assignedBy) {
+    return <span className="text-xs text-muted-foreground">-</span>;
+  }
+
+  return (
+    <span className="text-xs text-muted-foreground">
+      {memberService.getDisplayName(assignedBy)}
+    </span>
   );
 };
 

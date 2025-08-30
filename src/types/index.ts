@@ -42,6 +42,7 @@ export interface Penalty {
   created_time?: string;
   location_latitude?: number;
   location_longitude?: number;
+  assigned_by_user_id?: string;
   member?: Member;
   penalty_type?: PenaltyCatalog;
 }

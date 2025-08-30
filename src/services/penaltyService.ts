@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { authService } from './authService';
 import { Penalty } from '@/types';
 
 export const penaltyService = {
@@ -9,7 +10,11 @@ export const penaltyService = {
       .select(`
         *,
         member:members(*),
-        penalty_type:penalty_catalog(*)
+        penalty_type:penalty_catalog(*),
+        assigned_by:user_roles!penalties_assigned_by_user_id_fkey(
+          user_id,
+          member:members(*)
+        )
       `)
       .order('created_time', { ascending: false });
     
@@ -159,22 +164,37 @@ export const penaltyService = {
     location_longitude?: number;
     event_id?: string;
   }): Promise<Penalty> {
-    const { data, error } = await supabase
-      .from('penalties')
-      .insert([{
+    try {
+      // Get current user session for tracking who assigned the penalty
+      const session = await authService.getCurrentSession();
+      
+      const penaltyData = {
         ...penalty,
         date: penalty.date || new Date().toISOString().split('T')[0],
-        created_time: new Date().toISOString()
-      }])
-      .select(`
-        *,
-        member:members(*),
-        penalty_type:penalty_catalog(*)
-      `)
-      .single();
-    
-    if (error) throw error;
-    return data as Penalty;
+        created_time: new Date().toISOString(),
+        assigned_by_user_id: session?.user?.id || null
+      };
+      
+      const { data, error } = await supabase
+        .from('penalties')
+        .insert([penaltyData])
+        .select(`
+          *,
+          member:members(*),
+          penalty_type:penalty_catalog(*),
+          assigned_by:user_roles!penalties_assigned_by_user_id_fkey(
+            user_id,
+            member:members(*)
+          )
+        `)
+        .single();
+      
+      if (error) throw error;
+      return data as Penalty;
+    } catch (error) {
+      console.error('Error creating penalty:', error);
+      throw error;
+    }
   },
 
   // Update penalty

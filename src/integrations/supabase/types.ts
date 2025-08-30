@@ -187,6 +187,7 @@ export type Database = {
       penalties: {
         Row: {
           amount: number
+          assigned_by_user_id: string | null
           created_at: string
           created_time: string | null
           date: string
@@ -202,6 +203,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          assigned_by_user_id?: string | null
           created_at?: string
           created_time?: string | null
           date?: string
@@ -217,6 +219,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          assigned_by_user_id?: string | null
           created_at?: string
           created_time?: string | null
           date?: string

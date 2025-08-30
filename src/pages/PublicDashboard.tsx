@@ -108,10 +108,10 @@ const PublicDashboard = () => {
             <Button
               variant="outline-inverse"
               onClick={() => navigate('/auth')}
+              size="icon"
               className="flex items-center gap-2"
             >
               <LogIn className="w-4 h-4" />
-              Login (Chargierte)
             </Button>
           </div>
         </div>
