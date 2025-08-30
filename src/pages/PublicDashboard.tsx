@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn, Settings } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
+import { userService } from '@/services/userService';
 import { Member, Penalty } from '@/types';
 import { formatDateTime } from '@/utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
@@ -252,6 +253,11 @@ const PublicDashboard = () => {
                           </Badge>
                           <span>{formatDateTime(penalty.created_time || penalty.date)}</span>
                         </div>
+                        {penalty.assigned_by_user_id && (
+                          <div className="text-xs text-muted-foreground mt-1">
+                            <AssignedByDisplay penaltyId={penalty.id} assignedByUserId={penalty.assigned_by_user_id} />
+                          </div>
+                        )}
                         {penalty.notes && (
                           <div className="text-xs text-muted-foreground mt-1">
                             {penalty.notes}
@@ -281,6 +287,39 @@ const PublicDashboard = () => {
         </Card>
       </div>
     </div>
+  );
+};
+
+// Component to display who assigned the penalty
+const AssignedByDisplay = ({ penaltyId, assignedByUserId }: { penaltyId: string; assignedByUserId: string }) => {
+  const [assignedBy, setAssignedBy] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchAssignedBy = async () => {
+      try {
+        const userData = await userService.getAssignedByInfo({ id: penaltyId, assigned_by_user_id: assignedByUserId } as Penalty);
+        setAssignedBy(userData);
+      } catch (error) {
+        console.error('Error fetching assigned-by info:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAssignedBy();
+  }, [penaltyId, assignedByUserId]);
+
+  if (loading) {
+    return <span>Laden...</span>;
+  }
+
+  if (!assignedBy) {
+    return <span>Vergeben von: Unbekannt</span>;
+  }
+
+  return (
+    <span>Vergeben von: {memberService.getDisplayName(assignedBy)}</span>
   );
 };
 

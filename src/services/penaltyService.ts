@@ -3,9 +3,12 @@ import { authService } from './authService';
 import { Penalty } from '@/types';
 
 export const penaltyService = {
-  // Get all penalties with member information
+  // Get all penalties with member information (only from active event)
   async getAll(): Promise<Penalty[]> {
-    const { data, error } = await supabase
+    // First get the active event
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    
+    let query = supabase
       .from('penalties')
       .select(`
         *,
@@ -14,11 +17,18 @@ export const penaltyService = {
       `)
       .order('created_time', { ascending: false });
     
+    // Filter by active event if one exists
+    if (activeEvent && activeEvent.length > 0) {
+      query = query.eq('event_id', activeEvent[0].id);
+    }
+    
+    const { data, error } = await query;
+    
     if (error) throw error;
     return (data || []) as Penalty[];
   },
 
-  // Get penalties with filters and pagination
+  // Get penalties with filters and pagination (only from active event)
   async getFiltered(options: {
     limit?: number;
     offset?: number;
@@ -29,6 +39,9 @@ export const penaltyService = {
   } = {}): Promise<Penalty[]> {
     const { limit = 10, offset = 0, memberId, categoryFilter, dateFrom, dateTo } = options;
     
+    // First get the active event
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    
     let query = supabase
       .from('penalties')
       .select(`
@@ -37,6 +50,11 @@ export const penaltyService = {
         penalty_type:penalty_catalog(*)
       `)
       .order('created_time', { ascending: false });
+
+    // Filter by active event if one exists
+    if (activeEvent && activeEvent.length > 0) {
+      query = query.eq('event_id', activeEvent[0].id);
+    }
 
     if (memberId && memberId.trim() !== '') {
       query = query.eq('member_id', memberId.trim());
@@ -94,9 +112,12 @@ export const penaltyService = {
     return (data || []) as Penalty[];
   },
 
-  // Get recent penalties with pagination
+  // Get recent penalties with pagination (only from active event)
   async getRecent(limit: number = 10, offset: number = 0): Promise<Penalty[]> {
-    const { data, error } = await supabase
+    // First get the active event
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    
+    let query = supabase
       .from('penalties')
       .select(`
         *,
@@ -105,6 +126,13 @@ export const penaltyService = {
       `)
       .order('created_time', { ascending: false })
       .range(offset, offset + limit - 1);
+    
+    // Filter by active event if one exists
+    if (activeEvent && activeEvent.length > 0) {
+      query = query.eq('event_id', activeEvent[0].id);
+    }
+    
+    const { data, error } = await query;
     
     if (error) throw error;
     return (data || []) as Penalty[];
@@ -144,8 +172,18 @@ export const penaltyService = {
       // Get current user session for tracking who assigned the penalty
       const session = await authService.getCurrentSession();
       
+      // Get active event if no event_id provided
+      let eventId = penalty.event_id;
+      if (!eventId) {
+        const { data: activeEvent } = await supabase.rpc('get_active_event');
+        if (activeEvent && activeEvent.length > 0) {
+          eventId = activeEvent[0].id;
+        }
+      }
+      
       const penaltyData = {
         ...penalty,
+        event_id: eventId,
         date: penalty.date || new Date().toISOString().split('T')[0],
         created_time: new Date().toISOString(),
         assigned_by_user_id: session?.user?.id || null
@@ -217,24 +255,34 @@ export const penaltyService = {
     };
   },
 
-  // Get the member with the most penalties (Zugsau)
+  // Get the member with the most penalties (Zugsau) - only from active event
   async getZugsau(): Promise<{ member: any; totalAmount: number; penaltyCount: number } | null> {
-    const { data, error } = await supabase
+    // First get the active event
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    
+    let query = supabase
       .from('members')
       .select(`
         *,
-        penalties!inner(amount)
+        penalties!inner(amount, event_id)
       `)
       .eq('is_active', true);
+
+    const { data, error } = await query;
 
     if (error) throw error;
     
     if (!data || data.length === 0) return null;
 
-    // Calculate totals for each member
+    // Calculate totals for each member (filter penalties by active event)
     const memberStats = data.map(member => {
-      const totalAmount = member.penalties.reduce((sum: number, penalty: any) => sum + Number(penalty.amount), 0);
-      const penaltyCount = member.penalties.length;
+      // Filter penalties by active event
+      const activePenalties = activeEvent && activeEvent.length > 0 
+        ? member.penalties.filter((penalty: any) => penalty.event_id === activeEvent[0].id)
+        : member.penalties;
+        
+      const totalAmount = activePenalties.reduce((sum: number, penalty: any) => sum + Number(penalty.amount), 0);
+      const penaltyCount = activePenalties.length;
       
       return {
         member: {
