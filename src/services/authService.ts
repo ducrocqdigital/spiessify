@@ -53,6 +53,13 @@ class AuthService {
     if (error) throw error;
   }
 
+  async resetPassword(email: string) {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/auth?reset=true`
+    });
+    if (error) throw error;
+  }
+
   async getCurrentSession() {
     const { data: { session }, error } = await supabase.auth.getSession();
     if (error) throw error;

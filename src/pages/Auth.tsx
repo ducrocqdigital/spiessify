@@ -33,6 +33,9 @@ const Auth = () => {
     rememberMe: true
   });
   
+  const [resetEmail, setResetEmail] = useState('');
+  const [showResetForm, setShowResetForm] = useState(false);
+  
   const [signupForm, setSignupForm] = useState({
     email: '',
     password: '',
@@ -77,6 +80,27 @@ const Auth = () => {
     } catch (error: any) {
       console.error('Login error:', error);
       setError(getAuthErrorMessage(error.message));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSubmitting(true);
+    setError('');
+
+    try {
+      await authService.resetPassword(resetEmail);
+      toast({
+        title: "E-Mail gesendet",
+        description: "Überprüfen Sie Ihre E-Mail für den Passwort-Reset-Link."
+      });
+      setShowResetForm(false);
+      setResetEmail('');
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      setError('Fehler beim Senden der Reset-E-Mail. Bitte versuchen Sie es erneut.');
     } finally {
       setSubmitting(false);
     }
@@ -226,7 +250,48 @@ const Auth = () => {
                   <Button type="submit" className="w-full" disabled={submitting}>
                     {submitting ? 'Anmelden...' : 'Anmelden'}
                   </Button>
+                  
+                  <div className="text-center">
+                    <Button
+                      variant="link"
+                      type="button"
+                      onClick={() => setShowResetForm(!showResetForm)}
+                      className="text-sm"
+                    >
+                      Passwort vergessen?
+                    </Button>
+                  </div>
                 </form>
+
+                {showResetForm && (
+                  <form onSubmit={handlePasswordReset} className="space-y-4 mt-4 pt-4 border-t">
+                    <div className="space-y-2">
+                      <Label htmlFor="resetEmail">E-Mail für Passwort-Reset</Label>
+                      <Input
+                        id="resetEmail"
+                        type="email"
+                        placeholder="ihre.email@beispiel.de"
+                        required
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                      />
+                    </div>
+                    
+                    <div className="flex space-x-2">
+                      <Button type="submit" disabled={submitting} className="flex-1">
+                        {submitting ? 'Senden...' : 'Reset-Link senden'}
+                      </Button>
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        onClick={() => setShowResetForm(false)}
+                        className="flex-1"
+                      >
+                        Abbrechen
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
