@@ -26,12 +26,12 @@ export function ProtectedRoute({
     }
 
     if (requiredRole === 'oberadmin' && !isOberadmin) {
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
 
     if (requiredRole === 'chargierte' && !isChargierte && !isOberadmin) {
-      navigate('/dashboard', { replace: true });
+      navigate('/', { replace: true });
       return;
     }
   }, [
