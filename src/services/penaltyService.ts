@@ -7,30 +7,23 @@ const securePublicMethods = {
   // SECURE: Get recent penalties for public display (no sensitive data)
   async getRecentPublic(limit: number = 10, offset: number = 0): Promise<any[]> {
     const { data, error } = await supabase
-      .from('penalties')
-      .select(`
-        id,
-        amount,
-        date,
-        created_at,
-        penalty_type:penalty_catalog(name),
-        member:members(first_name, last_name, family_name_particle, nickname)
-      `)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .rpc('get_recent_penalties_public', { 
+        limit_count: limit, 
+        offset_count: offset 
+      });
 
     if (error) throw error;
     
-    return (data || []).map(p => ({
-      id: p.id,
-      amount: p.amount,
-      penalty_date: p.date,
-      created_time: p.created_at,
-      penalty_type_name: p.penalty_type?.name,
-      member_first_name: p.member?.first_name,
-      member_last_name: p.member?.last_name,
-      member_family_name_particle: p.member?.family_name_particle,
-      member_nickname: p.member?.nickname
+    return (data || []).map((item: any) => ({
+      id: item.id,
+      amount: item.amount,
+      penalty_date: item.penalty_date,
+      created_time: item.created_time,
+      penalty_type_name: item.penalty_type_name,
+      member_first_name: item.member_first_name,
+      member_last_name: item.member_last_name,
+      member_family_name_particle: item.member_family_name_particle,
+      member_nickname: item.member_nickname
     }));
   },
 
