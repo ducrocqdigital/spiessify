@@ -160,21 +160,42 @@ export const memberService = {
 
   // SECURE: Get member statistics for public leaderboard (no sensitive data)
   async getMembersWithStatsPublic(): Promise<Member[]> {
-    const { data, error } = await supabase.rpc('get_members_with_public_stats');
+    const { data, error } = await supabase
+      .from('members')
+      .select(`
+        id,
+        first_name,
+        last_name,
+        family_name_particle,
+        nickname,
+        rank,
+        is_active,
+        created_at,
+        updated_at,
+        penalties:penalties(amount)
+      `)
+      .eq('is_active', true)
+      .order('last_name', { ascending: true });
 
     if (error) throw error;
 
     return (data || []).map(member => ({
-      ...member,
-      totalPenalties: Number(member.total_penalties),
-      totalAmount: Number(member.total_amount),
-      // Ensure sensitive fields are not included
+      id: member.id,
+      first_name: member.first_name,
+      last_name: member.last_name,
+      family_name_particle: member.family_name_particle,
+      nickname: member.nickname,
+      rank: member.rank,
+      is_active: member.is_active,
+      created_at: member.created_at,
+      updated_at: member.updated_at,
       email: undefined,
       phone: undefined,
       birth_date: undefined,
       join_year: undefined,
-      created_at: '',
-      updated_at: ''
+      profile_photo: undefined,
+      totalPenalties: member.penalties?.length || 0,
+      totalAmount: member.penalties?.reduce((sum: number, p: any) => sum + Number(p.amount), 0) || 0,
     } as Member));
   }
 };

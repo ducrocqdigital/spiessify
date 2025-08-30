@@ -6,26 +6,49 @@ import { Penalty } from '@/types';
 const securePublicMethods = {
   // SECURE: Get recent penalties for public display (no sensitive data)
   async getRecentPublic(limit: number = 10, offset: number = 0): Promise<any[]> {
-    const { data, error } = await supabase.rpc('get_recent_penalties_public', {
-      limit_count: limit,
-      offset_count: offset
-    });
+    const { data, error } = await supabase
+      .from('penalties')
+      .select(`
+        id,
+        amount,
+        date,
+        created_at,
+        penalty_type:penalty_catalog(name),
+        member:members(first_name, last_name, family_name_particle, nickname)
+      `)
+      .order('created_at', { ascending: false })
+      .range(offset, offset + limit - 1);
 
     if (error) throw error;
-    return data || [];
+    
+    return (data || []).map(p => ({
+      id: p.id,
+      amount: p.amount,
+      penalty_date: p.date,
+      created_time: p.created_at,
+      penalty_type_name: p.penalty_type?.name,
+      member_first_name: p.member?.first_name,
+      member_last_name: p.member?.last_name,
+      member_family_name_particle: p.member?.family_name_particle,
+      member_nickname: p.member?.nickname
+    }));
   },
 
   // SECURE: Get penalty statistics for public display
   async getStatsPublic(): Promise<{ totalPenalties: number; totalAmount: number; uniqueDays: number }> {
-    const { data, error } = await supabase.rpc('get_public_penalty_stats');
+    const { data, error } = await supabase
+      .from('penalties')
+      .select('amount, date');
 
     if (error) throw error;
     
-    const stats = data && data.length > 0 ? data[0] : { total_penalties: 0, total_amount: 0, unique_days: 0 };
+    const penalties = data || [];
+    const uniqueDaysSet = new Set(penalties.map(p => p.date));
+    
     return {
-      totalPenalties: Number(stats.total_penalties),
-      totalAmount: Number(stats.total_amount),
-      uniqueDays: Number(stats.unique_days)
+      totalPenalties: penalties.length,
+      totalAmount: penalties.reduce((sum, p) => sum + Number(p.amount), 0),
+      uniqueDays: uniqueDaysSet.size
     };
   },
 };
