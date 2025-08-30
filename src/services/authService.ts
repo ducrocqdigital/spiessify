@@ -77,24 +77,51 @@ class AuthService {
 
   async getCurrentUserProfile(): Promise<UserProfile | null> {
     const session = await this.getCurrentSession();
-    if (!session?.user) return null;
+    if (!session?.user) {
+      console.log('No session in getCurrentUserProfile');
+      return null;
+    }
 
-    const { data, error } = await supabase.rpc('get_user_profile', {
-      _user_id: session.user.id
-    });
+    console.log('Fetching profile for user:', session.user.id);
 
-    if (error) throw error;
-    
-    if (!data || data.length === 0) return null;
-    
-    const profileData = data[0];
-    return {
-      user_id: profileData.user_id,
-      member_id: profileData.member_id,
-      is_oberadmin: profileData.is_oberadmin,
-      is_chargierte: profileData.is_chargierte,
-      member_data: profileData.member_data as unknown as Member
-    };
+    try {
+      // Query user_roles directly instead of using RPC
+      const { data: userRole, error } = await supabase
+        .from('user_roles')
+        .select(`
+          *,
+          member:members(*)
+        `)
+        .eq('user_id', session.user.id)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error fetching user profile:', error);
+        throw error;
+      }
+
+      if (!userRole) {
+        console.log('No user role found for user:', session.user.id);
+        return null;
+      }
+
+      console.log('User role found:', userRole);
+
+      // Define leadership ranks that count as "chargierte"
+      const chargiereRanks = ['leutnant', 'oberleutnant', 'hauptmann', 'major', 'oberst'];
+      const isChargierte = userRole.member?.rank ? chargiereRanks.includes(userRole.member.rank) : false;
+
+      return {
+        user_id: userRole.user_id,
+        member_id: userRole.member_id,
+        is_oberadmin: userRole.is_oberadmin,
+        is_chargierte: isChargierte,
+        member_data: userRole.member as unknown as Member
+      };
+    } catch (error) {
+      console.error('Error in getCurrentUserProfile:', error);
+      throw error;
+    }
   }
 
   async linkUserToMember(userId: string, memberId: string, isOberadmin: boolean = false) {
