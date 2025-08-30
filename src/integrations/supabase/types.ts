@@ -84,13 +84,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "inspection_results_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "inspection_results_session_id_fkey"
             columns: ["session_id"]
             isOneToOne: false
@@ -256,13 +249,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "penalties_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: false
-            referencedRelation: "members_public"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "penalties_penalty_type_id_fkey"
             columns: ["penalty_type_id"]
             isOneToOne: false
@@ -340,50 +326,11 @@ export type Database = {
             referencedRelation: "members"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "user_roles_member_id_fkey"
-            columns: ["member_id"]
-            isOneToOne: true
-            referencedRelation: "members_public"
-            referencedColumns: ["id"]
-          },
         ]
       }
     }
     Views: {
-      members_public: {
-        Row: {
-          family_name_particle: string | null
-          first_name: string | null
-          id: string | null
-          is_active: boolean | null
-          last_name: string | null
-          nickname: string | null
-          profile_photo: string | null
-          rank: Database["public"]["Enums"]["member_rank"] | null
-        }
-        Insert: {
-          family_name_particle?: string | null
-          first_name?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          last_name?: string | null
-          nickname?: string | null
-          profile_photo?: string | null
-          rank?: Database["public"]["Enums"]["member_rank"] | null
-        }
-        Update: {
-          family_name_particle?: string | null
-          first_name?: string | null
-          id?: string | null
-          is_active?: boolean | null
-          last_name?: string | null
-          nickname?: string | null
-          profile_photo?: string | null
-          rank?: Database["public"]["Enums"]["member_rank"] | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       get_active_event: {

@@ -37,7 +37,7 @@ const PublicDashboard = () => {
   const loadData = async () => {
     try {
       const [membersData, penaltiesData, recentPenaltiesData] = await Promise.all([
-        memberService.getMembersWithStats(),
+        memberService.getMembersWithStatsPublic(), // Use secure public function
         penaltyService.getAll(),
         penaltyService.getRecent(10, 0)
       ]);

@@ -132,7 +132,7 @@ export const memberService = {
     return member.last_name;
   },
 
-  // Get member with penalty statistics
+  // Get member with penalty statistics (for authenticated users)
   async getMembersWithStats(): Promise<Member[]> {
     const { data, error } = await supabase
       .from('members')
@@ -156,5 +156,25 @@ export const memberService = {
         penalties: undefined // Remove the raw penalties data
       };
     });
+  },
+
+  // SECURE: Get member statistics for public leaderboard (no sensitive data)
+  async getMembersWithStatsPublic(): Promise<Member[]> {
+    const { data, error } = await supabase.rpc('get_members_with_public_stats');
+
+    if (error) throw error;
+
+    return (data || []).map(member => ({
+      ...member,
+      totalPenalties: Number(member.total_penalties),
+      totalAmount: Number(member.total_amount),
+      // Ensure sensitive fields are not included
+      email: undefined,
+      phone: undefined,
+      birth_date: undefined,
+      join_year: undefined,
+      created_at: '',
+      updated_at: ''
+    } as Member));
   }
 };
