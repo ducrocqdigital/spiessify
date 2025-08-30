@@ -6,7 +6,7 @@ import { Penalty, Member } from '@/types';
 import { formatDateTime } from '@/utils/dateUtils';
 
 const IframePenaltyList = () => {
-  const [penalties, setPenalties] = useState<Penalty[]>([]);
+  const [penalties, setPenalties] = useState<any[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ const IframePenaltyList = () => {
   const loadData = async () => {
     try {
       const [penaltiesData, membersData] = await Promise.all([
-        penaltyService.getRecent(50, 0),
+        penaltyService.getRecentPublic(50, 0),
         memberService.getActive()
       ]);
       setPenalties(penaltiesData);
@@ -31,8 +31,11 @@ const IframePenaltyList = () => {
 
   const getLeaderboard = () => {
     const memberPenalties = members.map(member => {
-      const memberPenaltiesData = penalties.filter(p => p.member_id === member.id);
-      const totalAmount = memberPenaltiesData.reduce((sum, p) => sum + p.amount, 0);
+      const memberPenaltiesData = penalties.filter(p => 
+        (p.member_first_name === member.first_name && p.member_last_name === member.last_name) ||
+        (p.member_nickname && p.member_nickname === member.nickname)
+      );
+      const totalAmount = memberPenaltiesData.reduce((sum, p) => sum + Number(p.amount), 0);
       const totalCount = memberPenaltiesData.length;
       
       return {
@@ -105,32 +108,22 @@ const IframePenaltyList = () => {
             {penalties.map((penalty) => (
               <div key={penalty.id} className="flex items-center justify-between p-4 bg-card border border-border rounded-lg hover:shadow-sm transition-shadow">
                 <div className="flex-1">
-                  <div className="font-medium text-foreground text-lg">
-                    {penalty.member ? memberService.getPublicDisplayName(penalty.member) : 'Unbekannt'}
-                  </div>
-                  <div className="flex items-center gap-3 mt-2">
-                    <Badge variant="outline" className="text-xs">
-                      {penalty.penalty_type?.name || 'Unbekannt'}
-                    </Badge>
-                    <span className="text-sm text-muted-foreground">
-                      {formatDateTime(penalty.created_time || penalty.date)}
-                    </span>
-                  </div>
-                  {penalty.notes && (
-                    <div className="text-sm text-muted-foreground mt-2">
-                      {penalty.notes}
-                    </div>
-                  )}
+                   <div className="font-medium text-foreground text-lg">
+                     {penalty.member_nickname || `${penalty.member_first_name || ''} ${penalty.member_last_name || ''}`.trim() || 'Unbekannt'}
+                   </div>
+                   <div className="flex items-center gap-3 mt-2">
+                     <Badge variant="outline" className="text-xs">
+                       {penalty.penalty_type_name || 'Unbekannt'}
+                     </Badge>
+                     <span className="text-sm text-muted-foreground">
+                       {formatDateTime(penalty.created_time || penalty.penalty_date)}
+                     </span>
+                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-xl font-bold text-primary">
                     {penalty.amount}€
                   </div>
-                  {penalty.multiplier && penalty.multiplier > 1 && (
-                    <div className="text-xs text-muted-foreground">
-                      {penalty.multiplier}x Faktor
-                    </div>
-                  )}
                 </div>
               </div>
             ))}
