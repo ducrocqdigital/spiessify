@@ -34,6 +34,7 @@ const App = () => (
               <Route path="/" element={<PublicDashboard />} />
               <Route path="/dashboard" element={<Navigate to="/" replace />} />
               <Route path="/auth" element={<Auth />} />
+              <Route path="/admin-login" element={<Navigate to="/auth" replace />} />
               <Route path="/admin" element={
                 <ProtectedRoute requiredRole="chargierte">
                   <AdminDashboard />
