@@ -153,20 +153,11 @@ const AdminDashboard = () => {
         dateTo: useFilters.date && useFilters.date.trim() !== '' ? useFilters.date.trim() : undefined
       };
       
-      console.log('Loading filtered penalties:', {
-        limit: pageSize,
-        offset,
-        ...filterOptions,
-        originalFilters: useFilters
-      });
-      
       const filteredData = await penaltyService.getFiltered({
         limit: pageSize,
         offset,
         ...filterOptions
       });
-      
-      console.log('Filtered data received:', filteredData.length, 'items', 'pageSize:', pageSize);
       
       if (reset) {
         setPenalties(filteredData);
@@ -205,10 +196,40 @@ const AdminDashboard = () => {
   };
 
   const handlePageSizeChange = (value: string) => {
-    setPageSize(parseInt(value));
+    const newPageSize = parseInt(value);
+    setPageSize(newPageSize);
     setPenalties([]);
     setHasMore(true);
-    setTimeout(() => loadFilteredPenalties(true, filters), 100);
+    
+    // Use the new page size directly instead of relying on state
+    const loadWithNewPageSize = async () => {
+      try {
+        const filterOptions = {
+          memberId: filters.memberId && filters.memberId.trim() !== '' ? filters.memberId.trim() : undefined,
+          categoryFilter: filters.category === "all" ? undefined : filters.category,
+          dateFrom: filters.date && filters.date.trim() !== '' ? filters.date.trim() : undefined,
+          dateTo: filters.date && filters.date.trim() !== '' ? filters.date.trim() : undefined
+        };
+        
+        const filteredData = await penaltyService.getFiltered({
+          limit: newPageSize,
+          offset: 0,
+          ...filterOptions
+        });
+        
+        setPenalties(filteredData);
+        setHasMore(filteredData.length === newPageSize);
+      } catch (error) {
+        console.error('Failed to load filtered penalties:', error);
+        toast({
+          title: "Fehler",
+          description: "Strafen konnten nicht geladen werden.",
+          variant: "destructive",
+        });
+      }
+    };
+    
+    loadWithNewPageSize();
   };
 
   const clearFilters = () => {
