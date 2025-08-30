@@ -74,12 +74,6 @@ const AdminDashboard = () => {
   
 
   useEffect(() => {
-    const isAdmin = localStorage.getItem('isAdmin');
-    if (!isAdmin) {
-      navigate('/admin-login');
-      return;
-    }
-    
     // Reset filters on page load for fresh data
     setFilters({
       memberId: '',
@@ -353,9 +347,9 @@ const AdminDashboard = () => {
     loadDashboardData();
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('isAdmin');
+  const handleLogout = async () => {
     localStorage.removeItem('checkInSession'); // Clear check-in session on logout
+    await signOut();
     navigate('/');
   };
 
