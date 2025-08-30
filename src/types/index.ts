@@ -130,3 +130,23 @@ export interface Event {
   created_at: string;
   updated_at: string;
 }
+
+// User role types
+export interface UserRole {
+  id: string;
+  user_id: string;
+  member_id: string;
+  is_oberadmin: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface UserProfile {
+  user_id: string;
+  member_id: string;
+  is_oberadmin: boolean;
+  is_chargierte: boolean;
+  member_data: Member;
+}
+
+export type UserPermission = 'oberadmin' | 'chargierte' | 'schuetze';

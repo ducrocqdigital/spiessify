@@ -107,7 +107,7 @@ const PublicDashboard = () => {
             </div>
             <Button
               variant="outline-inverse"
-              onClick={() => navigate('/admin-login')}
+              onClick={() => navigate('/auth')}
               className="flex items-center gap-2"
             >
               <LogIn className="w-4 h-4" />

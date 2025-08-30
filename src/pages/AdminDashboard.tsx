@@ -5,14 +5,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Minus, Filter, Clock, Trophy, User } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { PlusCircle, Users, Euro, BarChart3, LogOut, ThumbsDown, Minus, Filter, Clock, Trophy, User, Settings } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import SettingsMenu from '@/components/SettingsMenu';
+import { useAuth } from '@/hooks/useAuth';
+import { useToast } from '@/hooks/use-toast';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
 import { Penalty, PENALTY_CATALOG_CATEGORIES } from '@/types';
-import { useToast } from '@/hooks/use-toast';
 import PenaltyTable from '@/components/PenaltyTable';
 import { AddCreditDialog } from '@/components/AddCreditDialog';
 import { CheckInStartModal } from '@/components/CheckInStartModal';
@@ -27,6 +29,8 @@ import { NoEventModal } from '@/components/NoEventModal';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { userProfile, isOberadmin, signOut } = useAuth();
+  const { toast } = useToast();
   const [memberRanking, setMemberRanking] = useState<any[]>([]);
   const [stats, setStats] = useState({
     totalMembers: 0,
@@ -68,7 +72,6 @@ const AdminDashboard = () => {
     date: ''
   });
   
-  const { toast } = useToast();
 
   useEffect(() => {
     const isAdmin = localStorage.getItem('isAdmin');

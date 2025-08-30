@@ -290,6 +290,41 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          is_oberadmin: boolean
+          member_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_oberadmin?: boolean
+          member_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_oberadmin?: boolean
+          member_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_roles_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: true
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -307,6 +342,20 @@ export type Database = {
           start_date: string
           updated_at: string
         }[]
+      }
+      get_user_profile: {
+        Args: { _user_id: string }
+        Returns: {
+          is_chargierte: boolean
+          is_oberadmin: boolean
+          member_data: Json
+          member_id: string
+          user_id: string
+        }[]
+      }
+      has_role: {
+        Args: { _role: string; _user_id: string }
+        Returns: boolean
       }
     }
     Enums: {

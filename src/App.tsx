@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import ErrorBoundary from "./components/ErrorBoundary";
 import Index from "./pages/Index";
+import Auth from "./pages/Auth";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import MemberManagement from "./pages/MemberManagement";
@@ -15,32 +16,61 @@ import PublicDashboard from "./pages/PublicDashboard";
 import IframePenaltyList from "./pages/IframePenaltyList";
 import { EventManagement } from "./pages/EventManagement";
 import NotFound from "./pages/NotFound";
+import { AuthProvider } from "./hooks/useAuth";
+import { ProtectedRoute } from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ErrorBoundary>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            <Route path="/admin-login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/members" element={<MemberManagement />} />
-            <Route path="/admin/penalty-catalog" element={<PenaltyCatalogManagement />} />
-            <Route path="/admin/penalties" element={<PenaltyManagement />} />
-            <Route path="/add-penalty" element={<AddPenalty />} />
-            <Route path="/dashboard" element={<PublicDashboard />} />
-            <Route path="/iframe/penalties" element={<IframePenaltyList />} />
-            <Route path="/events" element={<EventManagement />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </ErrorBoundary>
-      </BrowserRouter>
+      <AuthProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ErrorBoundary>
+            <Routes>
+              <Route path="/" element={<Navigate to="/dashboard" replace />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/admin-login" element={<AdminLogin />} />
+              <Route path="/admin" element={
+                <ProtectedRoute requiredRole="chargierte">
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/members" element={
+                <ProtectedRoute requiredRole="chargierte">
+                  <MemberManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/penalty-catalog" element={
+                <ProtectedRoute requiredRole="chargierte">
+                  <PenaltyCatalogManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/admin/penalties" element={
+                <ProtectedRoute requiredRole="chargierte">
+                  <PenaltyManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="/add-penalty" element={
+                <ProtectedRoute requiredRole="chargierte">
+                  <AddPenalty />
+                </ProtectedRoute>
+              } />
+              <Route path="/dashboard" element={<PublicDashboard />} />
+              <Route path="/iframe/penalties" element={<IframePenaltyList />} />
+              <Route path="/events" element={
+                <ProtectedRoute requiredRole="oberadmin">
+                  <EventManagement />
+                </ProtectedRoute>
+              } />
+              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </ErrorBoundary>
+        </BrowserRouter>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
