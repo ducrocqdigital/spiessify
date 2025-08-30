@@ -2,6 +2,7 @@ export interface Member {
   id: string;
   first_name: string;
   last_name: string;
+  family_name_particle?: string;
   nickname?: string;
   email?: string;
   phone?: string;

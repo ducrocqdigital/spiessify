@@ -103,8 +103,21 @@ export const memberService = {
   },
 
   // Get member display name (nickname or first+last name)
-  getDisplayName(member: Member): string {
-    return member.nickname || `${member.first_name} ${member.last_name}`;
+getDisplayName(member: Member): string {
+    if (member.nickname) return member.nickname;
+    
+    const particle = member.family_name_particle ? ` ${member.family_name_particle}` : '';
+    return `${member.first_name}${particle} ${member.last_name}`;
+  },
+
+  getFullName(member: Member): string {
+    const particle = member.family_name_particle ? ` ${member.family_name_particle}` : '';
+    return `${member.first_name}${particle} ${member.last_name}`;
+  },
+
+  getSortableName(member: Member): string {
+    // For sorting, use only the core family name (ignoring particles)
+    return member.last_name;
   },
 
   // Get member with penalty statistics

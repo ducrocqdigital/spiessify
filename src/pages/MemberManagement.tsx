@@ -27,6 +27,7 @@ const MemberManagement = () => {
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
+    family_name_particle: '',
     nickname: '',
     email: '',
     phone: '',
@@ -65,6 +66,7 @@ const MemberManagement = () => {
     setFormData({
       first_name: '',
       last_name: '',
+      family_name_particle: '',
       nickname: '',
       email: '',
       phone: '',
@@ -175,6 +177,7 @@ const MemberManagement = () => {
     setFormData({
       first_name: member.first_name,
       last_name: member.last_name,
+      family_name_particle: member.family_name_particle || '',
       nickname: member.nickname || '',
       email: member.email || '',
       phone: member.phone || '',
@@ -248,6 +251,17 @@ const MemberManagement = () => {
                   onChange={(e) => setFormData({...formData, first_name: e.target.value})}
                 />
               </div>
+              <div>
+                <Label htmlFor="family_name_particle">Namenszusatz</Label>
+                <Input
+                  id="family_name_particle"
+                  placeholder="z.B. von, van, de, di"
+                  value={formData.family_name_particle}
+                  onChange={(e) => setFormData({...formData, family_name_particle: e.target.value})}
+                />
+              </div>
+              </div>
+              <div className="grid grid-cols-1 gap-4">
               <div>
                 <Label htmlFor="last_name">Nachname *</Label>
                 <Input
@@ -366,7 +380,7 @@ const MemberManagement = () => {
                     <TableCell>
                       <div>
                         <div className="font-medium">
-                          {member.first_name} {member.last_name}
+                          {memberService.getFullName(member)}
                         </div>
                         {member.nickname && (
                           <div className="text-sm text-muted-foreground">
@@ -446,7 +460,7 @@ const MemberManagement = () => {
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <h3 className="font-medium text-card-foreground">
-                            {member.first_name} {member.last_name}
+                            {memberService.getFullName(member)}
                           </h3>
                           {member.nickname && (
                             <p className="text-sm text-muted-foreground">"{member.nickname}"</p>
@@ -548,6 +562,17 @@ const MemberManagement = () => {
                 onChange={(e) => setFormData({...formData, first_name: e.target.value})}
               />
             </div>
+            <div>
+              <Label htmlFor="edit_family_name_particle">Namenszusatz</Label>
+              <Input
+                id="edit_family_name_particle"
+                placeholder="z.B. von, van, de, di"
+                value={formData.family_name_particle}
+                onChange={(e) => setFormData({...formData, family_name_particle: e.target.value})}
+              />
+            </div>
+            </div>
+            <div className="grid grid-cols-1 gap-4">
             <div>
               <Label htmlFor="edit_last_name">Nachname *</Label>
               <Input

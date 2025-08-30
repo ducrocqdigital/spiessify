@@ -138,6 +138,7 @@ export type Database = {
           birth_date: string | null
           created_at: string
           email: string | null
+          family_name_particle: string | null
           first_name: string
           id: string
           is_active: boolean
@@ -153,6 +154,7 @@ export type Database = {
           birth_date?: string | null
           created_at?: string
           email?: string | null
+          family_name_particle?: string | null
           first_name: string
           id?: string
           is_active?: boolean
@@ -168,6 +170,7 @@ export type Database = {
           birth_date?: string | null
           created_at?: string
           email?: string | null
+          family_name_particle?: string | null
           first_name?: string
           id?: string
           is_active?: boolean
