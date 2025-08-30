@@ -3,18 +3,20 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn } from 'lucide-react';
+import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn, Settings } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
 import { Member, Penalty } from '@/types';
 import { formatDateTime } from '@/utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { EventHeader } from '@/components/EventHeader';
+import { useAuth } from '@/hooks/useAuth';
 
 type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
 
 const PublicDashboard = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, isOberadmin, isChargierte, signOut } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [members, setMembers] = useState<Member[]>([]);
   const [penalties, setPenalties] = useState<Penalty[]>([]);
@@ -105,14 +107,38 @@ const PublicDashboard = () => {
                 Wer hat die meisten Strafen gesammelt?
               </p>
             </div>
-            <Button
-              variant="outline-inverse"
-              onClick={() => navigate('/auth')}
-              size="icon"
-              className="flex items-center gap-2"
-            >
-              <LogIn className="w-4 h-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              {isAuthenticated ? (
+                <>
+                  {(isOberadmin || isChargierte) && (
+                    <Button
+                      variant="outline-inverse"
+                      onClick={() => navigate('/admin')}
+                      className="flex items-center gap-2"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Admin
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={() => signOut()}
+                    className="text-primary-foreground hover:bg-white/10"
+                  >
+                    Abmelden
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  variant="outline-inverse"
+                  onClick={() => navigate('/auth')}
+                  size="icon"
+                  className="flex items-center gap-2"
+                >
+                  <LogIn className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </div>
