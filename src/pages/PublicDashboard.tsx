@@ -35,7 +35,7 @@ const PublicDashboard = () => {
   const { isAuthenticated, isOberadmin, isChargierte, signOut } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [members, setMembers] = useState<PublicMemberStats[]>([]);
-  const [penaltyStats, setPenaltyStats] = useState<{ totalPenalties: number; totalAmount: number; uniqueDays: number }>({ totalPenalties: 0, totalAmount: 0, uniqueDays: 0 });
+  const [penaltyStats, setPenaltyStats] = useState<{ totalPenalties: number; totalAmount: number; penaltiesToday: number }>({ totalPenalties: 0, totalAmount: 0, penaltiesToday: 0 });
   const [recentPenalties, setRecentPenalties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -72,7 +72,7 @@ const PublicDashboard = () => {
       setPenaltyStats({
         totalPenalties: Number(statsData[0]?.total_penalties || 0),
         totalAmount: Number(statsData[0]?.total_amount || 0),
-        uniqueDays: Number(statsData[0]?.unique_days || 0)
+        penaltiesToday: Number(statsData[0]?.penalties_today || 0)
       });
       setRecentPenalties(recentPenaltiesData.map(p => ({
         id: p.id,
@@ -253,9 +253,9 @@ const PublicDashboard = () => {
             <CardContent className="p-4 text-center">
               <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
               <div className="text-2xl font-bold">
-                {loading ? '...' : penaltyStats.uniqueDays}
+                {loading ? '...' : penaltyStats.penaltiesToday}
               </div>
-              <div className="text-sm text-muted-foreground">Tage</div>
+              <div className="text-sm text-muted-foreground">Heute</div>
             </CardContent>
           </Card>
         </div>

@@ -364,9 +364,9 @@ export type Database = {
       get_public_penalty_stats: {
         Args: Record<PropertyKey, never>
         Returns: {
+          penalties_today: number
           total_amount: number
           total_penalties: number
-          unique_days: number
         }[]
       }
       get_recent_penalties_public: {
