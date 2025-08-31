@@ -251,9 +251,9 @@ const PublicDashboard = () => {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <Calendar className="w-8 h-8 mx-auto text-primary mb-2" />
+              <Euro className="w-8 h-8 mx-auto text-primary mb-2" />
               <div className="text-2xl font-bold">
-                {loading ? '...' : penaltyStats.penaltiesToday}
+                {loading ? '...' : `${penaltyStats.penaltiesToday}€`}
               </div>
               <div className="text-sm text-muted-foreground">Heute</div>
             </CardContent>

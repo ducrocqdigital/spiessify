@@ -27,7 +27,7 @@ const SettingsMenu = () => {
           <Button
             variant="ghost"
             className="w-full justify-start h-8 text-sm"
-            onClick={() => navigate('/admin/penalties')}
+            onClick={() => navigate('/admin/penalty-catalog')}
           >
             <Cog className="h-4 w-4 mr-2" />
             Strafen verwalten
