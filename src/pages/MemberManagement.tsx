@@ -39,13 +39,8 @@ const MemberManagement = () => {
   });
 
   useEffect(() => {
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (!isAdmin) {
-      navigate('/');
-      return;
-    }
     loadMembers();
-  }, [navigate]);
+  }, []);
 
   const loadMembers = async () => {
     try {

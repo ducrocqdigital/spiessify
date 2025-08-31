@@ -33,13 +33,8 @@ const PenaltyCatalogManagement = () => {
   });
 
   useEffect(() => {
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (!isAdmin) {
-      navigate('/');
-      return;
-    }
     loadPenaltyTypes();
-  }, [navigate]);
+  }, []);
 
   const loadPenaltyTypes = async () => {
     try {
