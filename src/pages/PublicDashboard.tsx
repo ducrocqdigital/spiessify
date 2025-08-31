@@ -163,6 +163,18 @@ const PublicDashboard = () => {
     }
   };
 
+  // Helper function to get public display name with abbreviated surname
+  const getPublicDisplayName = (member: { first_name: string; last_name: string; family_name_particle?: string; nickname?: string }) => {
+    if (member.nickname) return member.nickname;
+    
+    const abbreviatedLastName = member.last_name.charAt(0) + '.';
+    const abbreviatedParticle = member.family_name_particle 
+      ? ` ${member.family_name_particle.charAt(0)}.` 
+      : '';
+    
+    return `${member.first_name}${abbreviatedParticle} ${abbreviatedLastName}`;
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -272,8 +284,7 @@ const PublicDashboard = () => {
                       {getPositionIcon(index)}
                       <div>
                         <div className="font-medium">
-                          {member.family_name_particle ? `${member.family_name_particle}${member.last_name}` : member.last_name}, {member.first_name}
-                          {member.nickname && ` "${member.nickname}"`}
+                          {getPublicDisplayName(member)}
                         </div>
                         <div className="text-sm text-muted-foreground">
                           {member.totalPenalties || 0} Strafen
