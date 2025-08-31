@@ -11,14 +11,30 @@ import { formatDateTime } from '@/utils/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { EventHeader } from '@/components/EventHeader';
 import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 
 type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
+
+type PublicMemberStats = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  family_name_particle?: string;
+  nickname?: string;
+  rank: string;
+  is_active: boolean;
+  profile_photo?: string;
+  total_penalties: number;
+  total_amount: number;
+  created_at?: string;
+  updated_at?: string;
+};
 
 const PublicDashboard = () => {
   const navigate = useNavigate();
   const { isAuthenticated, isOberadmin, isChargierte, signOut } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
-  const [members, setMembers] = useState<Member[]>([]);
+  const [members, setMembers] = useState<PublicMemberStats[]>([]);
   const [penaltyStats, setPenaltyStats] = useState<{ totalPenalties: number; totalAmount: number; uniqueDays: number }>({ totalPenalties: 0, totalAmount: 0, uniqueDays: 0 });
   const [recentPenalties, setRecentPenalties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -31,14 +47,33 @@ const PublicDashboard = () => {
 
   const loadData = async () => {
     try {
-      const [membersData, penaltyStatsData, recentPenaltiesData] = await Promise.all([
-        memberService.getMembersWithStatsPublic(), // Use secure public function
-        penaltyService.getStatsPublic(), // Use secure public function 
-        penaltyService.getRecentPublic(10, 0) // Use secure public function
-      ]);
+      setLoading(true);
       
-      setMembers(membersData);
-      setPenaltyStats(penaltyStatsData);
+      // Load members with penalty stats for leaderboard
+      const { data: membersData, error: membersError } = await supabase
+        .rpc('get_members_with_public_stats');
+      
+      if (membersError) throw membersError;
+      
+      // Get penalty statistics
+      const { data: statsData, error: statsError } = await supabase
+        .rpc('get_public_penalty_stats');
+      
+      if (statsError) throw statsError;
+      
+      // Get recent penalties for the feed
+      const recentPenaltiesData = await penaltyService.getRecentPublic(10, 0);
+      
+      setMembers((membersData || []).map((m: any) => ({
+        ...m,
+        created_at: m.created_at || new Date().toISOString(),
+        updated_at: m.updated_at || new Date().toISOString()
+      })));
+      setPenaltyStats({
+        totalPenalties: Number(statsData[0]?.total_penalties || 0),
+        totalAmount: Number(statsData[0]?.total_amount || 0),
+        uniqueDays: Number(statsData[0]?.unique_days || 0)
+      });
       setRecentPenalties(recentPenaltiesData.map(p => ({
         id: p.id,
         amount: p.amount,
@@ -91,7 +126,15 @@ const PublicDashboard = () => {
   // Sort members by total amount (descending)
   const sortedMembers = useMemo(() => {
     if (loading) return [];
-    return [...members].sort((a, b) => (b.totalAmount || 0) - (a.totalAmount || 0));
+    return members
+      .filter(member => Number(member.total_amount) > 0)
+      .sort((a, b) => Number(b.total_amount) - Number(a.total_amount))
+      .slice(0, 10)
+      .map(member => ({
+        ...member,
+        totalAmount: Number(member.total_amount),
+        totalPenalties: Number(member.total_penalties)
+      }));
   }, [members, loading]);
 
   const getPositionIcon = (index: number) => {
@@ -228,7 +271,10 @@ const PublicDashboard = () => {
                     <div className="flex items-center gap-4">
                       {getPositionIcon(index)}
                       <div>
-                        <div className="font-medium">{memberService.getPublicDisplayName(member)}</div>
+                        <div className="font-medium">
+                          {member.family_name_particle ? `${member.family_name_particle}${member.last_name}` : member.last_name}, {member.first_name}
+                          {member.nickname && ` "${member.nickname}"`}
+                        </div>
                         <div className="text-sm text-muted-foreground">
                           {member.totalPenalties || 0} Strafen
                         </div>
