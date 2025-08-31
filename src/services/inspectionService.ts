@@ -171,6 +171,10 @@ export const inspectionService = {
   ): Promise<void> {
     const penaltyPromises: Promise<void>[] = [];
     
+    // Get the active event ID
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    const activeEventId = activeEvent && activeEvent.length > 0 ? activeEvent[0].id : null;
+    
     // Process penalties with multipliers
     Object.entries(inspectionData).forEach(([categoryKey, categoryData]) => {
       Object.entries(categoryData).forEach(([itemKey, multiplier]) => {
@@ -191,7 +195,7 @@ export const inspectionService = {
                   multiplier: multiplierValue,
                   notes: `Musterung: ${matchingPenalty.name}`,
                   date: new Date().toISOString().split('T')[0],
-                  event_id: penaltyCatalog.find(p => p.id === itemKey)?.event_id
+                  event_id: activeEventId
                 });
 
               if (error) {
