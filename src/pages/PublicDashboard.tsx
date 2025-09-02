@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom';
 import { EventHeader } from '@/components/EventHeader';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
+import { PersonDetailModal } from '@/components/PersonDetailModal';
 
 type FilterType = 'all' | 'today' | 'week' | 'uniform' | 'marsch' | 'sonstiges';
 
@@ -40,6 +41,8 @@ const PublicDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const [selectedMember, setSelectedMember] = useState<PublicMemberStats | null>(null);
+  const [isPersonModalOpen, setIsPersonModalOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -179,6 +182,26 @@ const PublicDashboard = () => {
     return `${member.first_name}${abbreviatedParticle} ${abbreviatedLastName}`;
   };
 
+  const handleMemberClick = (member: PublicMemberStats, rank: number) => {
+    setSelectedMember(member);
+    setIsPersonModalOpen(true);
+  };
+
+  const handlePenaltyMemberClick = (penaltyMember: any) => {
+    // Find the member in our members list to get full data
+    const fullMember = members.find(m => 
+      m.first_name === penaltyMember.first_name && 
+      m.last_name === penaltyMember.last_name &&
+      m.family_name_particle === penaltyMember.family_name_particle &&
+      m.nickname === penaltyMember.nickname
+    );
+    
+    if (fullMember) {
+      const memberRank = sortedMembers.findIndex(sm => sm.id === fullMember.id) + 1;
+      handleMemberClick(fullMember, memberRank);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -286,15 +309,20 @@ const PublicDashboard = () => {
                    >
                      <div className="flex items-center gap-4">
                        {getPositionIcon(index)}
-                       <div>
-                         <div className="font-medium flex items-center gap-2">
-                           {getPublicDisplayName(member)}
-                           {!member.is_active && (
-                             <Badge variant="outline" className="text-xs">
-                               Inaktiv
-                             </Badge>
-                           )}
-                         </div>
+                        <div>
+                          <div className="font-medium flex items-center gap-2">
+                            <button
+                              onClick={() => handleMemberClick(member, index + 1)}
+                              className="text-left hover:text-primary hover:underline transition-colors"
+                            >
+                              {getPublicDisplayName(member)}
+                            </button>
+                            {!member.is_active && (
+                              <Badge variant="outline" className="text-xs">
+                                Inaktiv
+                              </Badge>
+                            )}
+                          </div>
                          <div className="text-sm text-muted-foreground">
                            {member.totalPenalties || 0} Strafen
                          </div>
@@ -332,10 +360,19 @@ const PublicDashboard = () => {
                 <>
                   {recentPenalties.map((penalty) => (
                     <div key={penalty.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                      <div>
-                        <div className="font-medium">
-                          {penalty.member ? memberService.getPublicDisplayName(penalty.member) : 'Unbekannt'}
-                        </div>
+                       <div>
+                         <div className="font-medium">
+                           {penalty.member ? (
+                             <button
+                               onClick={() => handlePenaltyMemberClick(penalty.member)}
+                               className="text-left hover:text-primary hover:underline transition-colors"
+                             >
+                               {memberService.getPublicDisplayName(penalty.member)}
+                             </button>
+                           ) : (
+                             'Unbekannt'
+                           )}
+                         </div>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <Badge variant="outline" className="text-xs">
                             {penalty.penalty_type?.name || 'Unbekannt'}
@@ -370,6 +407,20 @@ const PublicDashboard = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Person Detail Modal */}
+      {selectedMember && (
+        <PersonDetailModal
+          isOpen={isPersonModalOpen}
+          onClose={() => {
+            setIsPersonModalOpen(false);
+            setSelectedMember(null);
+          }}
+          member={selectedMember}
+          memberRank={sortedMembers.findIndex(sm => sm.id === selectedMember.id) + 1}
+          totalMembers={sortedMembers.length}
+        />
+      )}
     </div>
   );
 };
