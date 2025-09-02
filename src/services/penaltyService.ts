@@ -290,7 +290,10 @@ export const penaltyService = {
     // Get active event to filter penalties
     const { data: activeEvent } = await supabase.rpc('get_active_event');
     
-    let penaltiesQuery = supabase.from('penalties').select('amount');
+    // Get all penalties (including from inactive members)
+    let penaltiesQuery = supabase
+      .from('penalties')
+      .select('amount');
     
     // Filter by active event if one exists
     if (activeEvent && activeEvent.length > 0) {
