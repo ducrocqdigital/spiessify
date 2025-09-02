@@ -129,7 +129,6 @@ const PublicDashboard = () => {
     return members
       .filter(member => Number(member.total_amount) > 0)
       .sort((a, b) => Number(b.total_amount) - Number(a.total_amount))
-      .slice(0, 10)
       .map(member => ({
         ...member,
         totalAmount: Number(member.total_amount),

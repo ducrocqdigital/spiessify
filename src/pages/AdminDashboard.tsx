@@ -677,7 +677,7 @@ const AdminDashboard = () => {
               <div className="text-center text-muted-foreground py-8">Laden...</div>
             ) : (
               <div className="space-y-2">
-                 {memberRanking.slice(0, 10).map((member, index) => (
+                 {memberRanking.map((member, index) => (
                    <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
                      <div className="flex items-center gap-3">
                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
@@ -703,11 +703,6 @@ const AdminDashboard = () => {
                      </div>
                    </div>
                  ))}
-                {memberRanking.length > 10 && (
-                  <div className="text-center text-sm text-muted-foreground pt-2">
-                    ... und {memberRanking.length - 10} weitere Schützen
-                  </div>
-                )}
               </div>
             )}
           </CardContent>
