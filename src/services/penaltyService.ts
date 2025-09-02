@@ -287,8 +287,18 @@ export const penaltyService = {
     todayCount: number;
     activeMembers: number;
   }> {
+    // Get active event to filter penalties
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    
+    let penaltiesQuery = supabase.from('penalties').select('amount');
+    
+    // Filter by active event if one exists
+    if (activeEvent && activeEvent.length > 0) {
+      penaltiesQuery = penaltiesQuery.eq('event_id', activeEvent[0].id);
+    }
+
     const [penalties, todayPenalties, activeMembers] = await Promise.all([
-      supabase.from('penalties').select('amount'),
+      penaltiesQuery,
       this.getToday(),
       supabase.from('members').select('id').eq('is_active', true)
     ]);
