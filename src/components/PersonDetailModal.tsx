@@ -53,11 +53,11 @@ export const PersonDetailModal = ({
   const loadPenalties = async () => {
     setLoading(true);
     try {
+      // Load penalties for all users (public and internal)
+      const penaltiesData = await penaltyService.getByMemberId(member.id);
+      
       if (isInternal) {
-        // Load detailed penalties for internal users
-        const penaltiesData = await penaltyService.getByMemberId(member.id);
-        
-        // Add assigned-by information for each penalty
+        // Add assigned-by information for internal users
         const penaltiesWithAssignedBy = await Promise.all(
           penaltiesData.map(async (penalty) => {
             const assignedByInfo = await userService.getAssignedByInfo(penalty);
@@ -67,11 +67,9 @@ export const PersonDetailModal = ({
             };
           })
         );
-        
         setPenalties(penaltiesWithAssignedBy);
       } else {
-        // Load basic penalties for public users
-        const penaltiesData = await penaltyService.getByMemberId(member.id);
+        // Public users see basic penalty information
         setPenalties(penaltiesData);
       }
     } catch (error) {
@@ -95,6 +93,23 @@ export const PersonDetailModal = ({
         ? ` ${member.family_name_particle.charAt(0)}.` 
         : '';
       return `${member.first_name}${abbreviatedParticle} ${abbreviatedLastName}`;
+    }
+  };
+
+  const getAssignedByDisplayName = (assignedByMember: any) => {
+    if (!assignedByMember) return '';
+    
+    if (isInternal) {
+      // Internal users see full names
+      const particle = assignedByMember.family_name_particle ? ` ${assignedByMember.family_name_particle}` : '';
+      return `${assignedByMember.first_name}${particle} ${assignedByMember.last_name}`;
+    } else {
+      // Public users see abbreviated names
+      const abbreviatedLastName = assignedByMember.last_name.charAt(0) + '.';
+      const abbreviatedParticle = assignedByMember.family_name_particle 
+        ? ` ${assignedByMember.family_name_particle.charAt(0)}.` 
+        : '';
+      return `${assignedByMember.first_name}${abbreviatedParticle} ${abbreviatedLastName}`;
     }
   };
 
@@ -208,7 +223,7 @@ export const PersonDetailModal = ({
                             )}
                             {penalty.assignedByMember && (
                               <div className="text-xs text-muted-foreground">
-                                Eingetragen von: {penalty.assignedByMember.first_name} {penalty.assignedByMember.last_name}
+                                Eingetragen von: {getAssignedByDisplayName(penalty.assignedByMember)}
                               </div>
                             )}
                           </>
