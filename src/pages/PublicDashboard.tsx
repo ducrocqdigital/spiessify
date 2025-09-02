@@ -35,7 +35,7 @@ const PublicDashboard = () => {
   const { isAuthenticated, isOberadmin, isChargierte, signOut } = useAuth();
   const [selectedFilter, setSelectedFilter] = useState<FilterType>('all');
   const [members, setMembers] = useState<PublicMemberStats[]>([]);
-  const [penaltyStats, setPenaltyStats] = useState<{ totalPenalties: number; totalAmount: number; penaltiesToday: number }>({ totalPenalties: 0, totalAmount: 0, penaltiesToday: 0 });
+  const [penaltyStats, setPenaltyStats] = useState<{ totalPenalties: number; totalAmount: number; penaltiesToday: number; todayAmount: number }>({ totalPenalties: 0, totalAmount: 0, penaltiesToday: 0, todayAmount: 0 });
   const [recentPenalties, setRecentPenalties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -61,6 +61,10 @@ const PublicDashboard = () => {
       
       if (statsError) throw statsError;
       
+      // Get today's penalties to calculate today's amount
+      const todayPenalties = await penaltyService.getToday();
+      const todayAmount = todayPenalties.reduce((sum, p) => sum + Number(p.amount), 0);
+      
       // Get recent penalties for the feed
       const recentPenaltiesData = await penaltyService.getRecentPublic(10, 0);
       
@@ -72,7 +76,8 @@ const PublicDashboard = () => {
       setPenaltyStats({
         totalPenalties: Number(statsData[0]?.total_penalties || 0),
         totalAmount: Number(statsData[0]?.total_amount || 0),
-        penaltiesToday: Number(statsData[0]?.penalties_today || 0)
+        penaltiesToday: Number(statsData[0]?.penalties_today || 0),
+        todayAmount: todayAmount
       });
       setRecentPenalties(recentPenaltiesData.map(p => ({
         id: p.id,
@@ -252,7 +257,7 @@ const PublicDashboard = () => {
             <CardContent className="p-4 text-center">
               <Euro className="w-8 h-8 mx-auto text-primary mb-2" />
               <div className="text-2xl font-bold">
-                {loading ? '...' : `${penaltyStats.penaltiesToday}€`}
+                {loading ? '...' : `${penaltyStats.todayAmount || 0}€`}
               </div>
               <div className="text-sm text-muted-foreground">Heute</div>
             </CardContent>
