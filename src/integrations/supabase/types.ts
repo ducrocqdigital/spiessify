@@ -408,19 +408,19 @@ export type Database = {
     }
     Enums: {
       member_rank:
-        | "rekrut"
+        | "passiv"
+        | "gastschuetze"
         | "schuetze"
+        | "oberschuetze"
         | "gefreiter"
         | "obergefreiter"
+        | "stabsgefreiter"
         | "unteroffizier"
+        | "stabsunteroffizier"
         | "feldwebel"
-        | "oberfeldwebel"
+        | "faehnrich"
         | "leutnant"
         | "oberleutnant"
-        | "hauptmann"
-        | "major"
-        | "oberst"
-        | "gastschuetze"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -549,19 +549,19 @@ export const Constants = {
   public: {
     Enums: {
       member_rank: [
-        "rekrut",
+        "passiv",
+        "gastschuetze",
         "schuetze",
+        "oberschuetze",
         "gefreiter",
         "obergefreiter",
+        "stabsgefreiter",
         "unteroffizier",
+        "stabsunteroffizier",
         "feldwebel",
-        "oberfeldwebel",
+        "faehnrich",
         "leutnant",
         "oberleutnant",
-        "hauptmann",
-        "major",
-        "oberst",
-        "gastschuetze",
       ],
     },
   },

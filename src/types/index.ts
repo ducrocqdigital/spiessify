@@ -50,19 +50,19 @@ export interface Penalty {
 export type PenaltyCatalogCategory = 'timing' | 'soziales' | 'abnahme' | 'maschieren' | 'sonstiges';
 
 export type MemberRank = 
-  | 'rekrut'
-  | 'schuetze' 
-  | 'gastschuetze'
+  | 'passiv'
+  | 'gastschuetze' 
+  | 'schuetze'
+  | 'oberschuetze'
   | 'gefreiter'
   | 'obergefreiter'
+  | 'stabsgefreiter'
   | 'unteroffizier'
+  | 'stabsunteroffizier'
   | 'feldwebel'
-  | 'oberfeldwebel'
+  | 'faehnrich'
   | 'leutnant'
-  | 'oberleutnant'
-  | 'hauptmann'
-  | 'major'
-  | 'oberst';
+  | 'oberleutnant';
 
 export const PENALTY_CATALOG_CATEGORIES = {
   timing: 'Timing',
@@ -76,19 +76,19 @@ export const PENALTY_CATALOG_CATEGORIES = {
 export const PENALTY_CATEGORIES = PENALTY_CATALOG_CATEGORIES;
 
 export const MEMBER_RANKS = {
-  rekrut: 'Rekrut',
-  schuetze: 'Schütze',
+  passiv: 'Passiv',
   gastschuetze: 'Gastschütze',
+  schuetze: 'Schütze',
+  oberschuetze: 'Oberschütze',
   gefreiter: 'Gefreiter',
   obergefreiter: 'Obergefreiter',
+  stabsgefreiter: 'Stabsgefreiter',
   unteroffizier: 'Unteroffizier',
+  stabsunteroffizier: 'Stabsunteroffizier',
   feldwebel: 'Feldwebel',
-  oberfeldwebel: 'Oberfeldwebel',
+  faehnrich: 'Fähnrich',
   leutnant: 'Leutnant',
-  oberleutnant: 'Oberleutnant',
-  hauptmann: 'Hauptmann',
-  major: 'Major',
-  oberst: 'Oberst'
+  oberleutnant: 'Oberleutnant'
 } as const;
 
 // Inspection types
