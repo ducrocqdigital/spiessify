@@ -274,34 +274,39 @@ const PublicDashboard = () => {
               ) : sortedMembers.length === 0 ? (
                 <div className="text-center text-muted-foreground py-8">Keine Daten vorhanden</div>
               ) : (
-                sortedMembers.map((member, index) => (
-                  <div
-                    key={member.id}
-                    className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-md ${getPositionClass(index)}`}
-                  >
-                    <div className="flex items-center gap-4">
-                      {getPositionIcon(index)}
-                      <div>
-                        <div className="font-medium">
-                          {getPublicDisplayName(member)}
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          {member.totalPenalties || 0} Strafen
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-xl font-bold text-primary">
-                        {member.totalAmount || 0}€
-                      </div>
-                      {(member.totalPenalties || 0) > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          ⌀ {((member.totalAmount || 0) / (member.totalPenalties || 1)).toFixed(1)}€
-                        </Badge>
-                      )}
-                    </div>
-                  </div>
-                ))
+                 sortedMembers.map((member, index) => (
+                   <div
+                     key={member.id}
+                     className={`flex items-center justify-between p-4 rounded-lg border transition-all hover:shadow-md ${getPositionClass(index)} ${!member.is_active ? 'opacity-60' : ''}`}
+                   >
+                     <div className="flex items-center gap-4">
+                       {getPositionIcon(index)}
+                       <div>
+                         <div className="font-medium flex items-center gap-2">
+                           {getPublicDisplayName(member)}
+                           {!member.is_active && (
+                             <Badge variant="outline" className="text-xs">
+                               Inaktiv
+                             </Badge>
+                           )}
+                         </div>
+                         <div className="text-sm text-muted-foreground">
+                           {member.totalPenalties || 0} Strafen
+                         </div>
+                       </div>
+                     </div>
+                     <div className="text-right">
+                       <div className="text-xl font-bold text-primary">
+                         {member.totalAmount || 0}€
+                       </div>
+                       {(member.totalPenalties || 0) > 0 && (
+                         <Badge variant="secondary" className="text-xs">
+                           ⌀ {((member.totalAmount || 0) / (member.totalPenalties || 1)).toFixed(1)}€
+                         </Badge>
+                       )}
+                     </div>
+                   </div>
+                 ))
               )}
             </div>
           </CardContent>

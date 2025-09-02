@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -678,7 +679,7 @@ const AdminDashboard = () => {
             ) : (
               <div className="space-y-2">
                  {memberRanking.map((member, index) => (
-                   <div key={member.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors">
+                   <div key={member.id} className={`flex items-center justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors ${!member.is_active ? 'opacity-60' : ''}`}>
                      <div className="flex items-center gap-3">
                        <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
                          {index + 1}
@@ -693,8 +694,13 @@ const AdminDashboard = () => {
                          </AvatarFallback>
                        </Avatar>
                        <div>
-                         <div className="font-medium text-card-foreground">
+                         <div className="font-medium text-card-foreground flex items-center gap-2">
                            {memberService.getDisplayName(member)}
+                           {!member.is_active && (
+                             <Badge variant="outline" className="text-xs">
+                               Inaktiv
+                             </Badge>
+                           )}
                          </div>
                        </div>
                      </div>

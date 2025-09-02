@@ -141,8 +141,7 @@ export const memberService = {
         penalties!inner(
           amount
         )
-      `)
-      .eq('is_active', true);
+      `);
 
     if (error) throw error;
 
@@ -174,7 +173,6 @@ export const memberService = {
         updated_at,
         penalties:penalties(amount)
       `)
-      .eq('is_active', true)
       .order('last_name', { ascending: true });
 
     if (error) throw error;
