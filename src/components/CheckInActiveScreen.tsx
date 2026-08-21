@@ -3,27 +3,29 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckInEndModal } from './CheckInEndModal';
-import { LateArrivalModal } from './LateArrivalModal';
+import { EditCheckInModal } from './EditCheckInModal';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
-import { checkinService } from '@/services/checkinService';
+import { checkinService, findLatePenaltyType, computeLateAmount } from '@/services/checkinService';
 import { Member, CheckinSession, CheckinResult } from '@/types';
 import { toast } from 'sonner';
 
 interface CheckInActiveScreenProps {
   session: CheckinSession;
   onEnd: (results: CheckinResult[]) => void;
+  onLeave: () => void;
 }
 
-export const CheckInActiveScreen = ({ session, onEnd }: CheckInActiveScreenProps) => {
+export const CheckInActiveScreen = ({ session, onEnd, onLeave }: CheckInActiveScreenProps) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [results, setResults] = useState<CheckinResult[]>([]);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [showEndModal, setShowEndModal] = useState(false);
-  const [showLateModal, setShowLateModal] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-  const [lateMinutes, setLateMinutes] = useState(0);
+  const [editMember, setEditMember] = useState<Member | null>(null);
+  const [editResult, setEditResult] = useState<CheckinResult | null>(null);
+  const [latePenaltyType, setLatePenaltyType] = useState<any | undefined>(undefined);
+  const [catalog, setCatalog] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
   const referenceDateTime = new Date(session.reference_time);
@@ -32,12 +34,15 @@ export const CheckInActiveScreen = ({ session, onEnd }: CheckInActiveScreenProps
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [activeMembers, sessionResults] = await Promise.all([
+        const [activeMembers, sessionResults, catalog] = await Promise.all([
           memberService.getActive(),
-          checkinService.getSessionResults(session.id)
+          checkinService.getSessionResults(session.id),
+          penaltyCatalogService.getActive()
         ]);
         setMembers(activeMembers);
         setResults(sessionResults);
+        setCatalog(catalog);
+        setLatePenaltyType(findLatePenaltyType(catalog));
       } catch (error) {
         console.error('Failed to load check-in data:', error);
         toast.error('Fehler beim Laden des Check-in-Stands');
@@ -80,93 +85,77 @@ export const CheckInActiveScreen = ({ session, onEnd }: CheckInActiveScreenProps
     const existing = results.find(r => r.member_id === member.id);
 
     if (existing) {
-      // Undo check-in (also removes a linked penalty)
-      setSaving(true);
-      try {
-        await checkinService.undoCheckIn(existing);
-        setResults(prev => prev.filter(r => r.id !== existing.id));
-        if (existing.penalty_id) {
-          toast.success(`Check-in zurückgenommen, Strafe gelöscht`);
-        }
-      } catch (error) {
-        console.error('Failed to undo check-in:', error);
-        toast.error('Fehler beim Zurücknehmen');
-      } finally {
-        setSaving(false);
-      }
+      // Already checked in: open the edit dialog (correct time/amount or check out)
+      setEditMember(member);
+      setEditResult(existing);
       return;
     }
 
+    // One tap = checked in. Late arrivals are booked automatically
+    // at the standard rate; corrections go through the edit dialog.
     const checkTime = new Date();
     const diffMs = checkTime.getTime() - referenceDateTime.getTime();
-    const minutesLate = Math.floor(diffMs / (1000 * 60));
-    const isOnTime = minutesLate <= 0;
+    const minutesLate = Math.max(0, Math.floor(diffMs / (1000 * 60)));
 
-    if (isOnTime) {
-      setSaving(true);
-      try {
-        const result = await checkinService.checkInMember(session.id, member.id, 0);
-        setResults(prev => [...prev, result]);
-      } catch (error) {
-        console.error('Failed to check in member:', error);
-        toast.error('Fehler beim Speichern des Check-ins');
-      } finally {
-        setSaving(false);
-      }
-    } else {
-      // Show late arrival modal
-      setSelectedMember(member);
-      setLateMinutes(minutesLate);
-      setShowLateModal(true);
-    }
-  };
-
-  const handleLateArrival = async (penaltyAmount: number) => {
-    if (!selectedMember) return;
     setSaving(true);
-
     try {
-      // Find the late arrival penalty type from catalog
-      const penaltyTypes = await penaltyCatalogService.getActive();
-      const latePenalty = penaltyTypes.find(
-        pt => pt.name.toLowerCase().includes('verspätung') ||
-              pt.category === 'timing' ||
-              pt.name.toLowerCase().includes('zu spät')
-      );
-
       let penaltyId: string | undefined;
-      if (latePenalty) {
-        const penalty = await penaltyService.create({
-          member_id: selectedMember.id,
-          penalty_type_id: latePenalty.id,
-          amount: penaltyAmount,
-          notes: `${session.occasion}: +${lateMinutes} Min.`,
-          event_id: session.event_id || undefined
-        });
-        penaltyId = penalty.id;
-      } else {
-        console.warn('No late arrival penalty type found in catalog');
-        toast.error('Keine Verspätungs-Strafe im Katalog gefunden');
+      if (minutesLate > 0) {
+        if (latePenaltyType) {
+          const amount = computeLateAmount(latePenaltyType, minutesLate);
+          const penalty = await penaltyService.create({
+            member_id: member.id,
+            penalty_type_id: latePenaltyType.id,
+            amount,
+            multiplier: latePenaltyType?.has_multiplier ? minutesLate : 1,
+            notes: `${session.occasion}: +${minutesLate} Min.`,
+            event_id: session.event_id || undefined
+          });
+          penaltyId = penalty.id;
+        } else {
+          toast.error('Keine Verspätungs-Strafe im Katalog gefunden');
+        }
       }
 
       const result = await checkinService.checkInMember(
         session.id,
-        selectedMember.id,
-        lateMinutes,
+        member.id,
+        minutesLate,
         penaltyId
       );
       setResults(prev => [...prev, result]);
 
-      toast.success(`Verspätung für ${memberService.getDisplayName(selectedMember)} erfasst`);
+      if (minutesLate > 0) {
+        toast.success(`${memberService.getDisplayName(member)}: +${minutesLate} Min. gebucht – zum Korrigieren antippen`);
+      }
     } catch (error) {
-      console.error('Failed to save penalty:', error);
-      toast.error('Fehler beim Speichern der Strafe');
+      console.error('Failed to check in member:', error);
+      toast.error('Fehler beim Speichern des Check-ins');
     } finally {
       setSaving(false);
     }
+  };
 
-    setShowLateModal(false);
-    setSelectedMember(null);
+  const handleEndWithMissed = async (missed: { memberId: string; catalogName: string | null }[]) => {
+    // Optional: Strafen für Nicht-Erschienene buchen
+    for (const m of missed) {
+      if (!m.catalogName) continue;
+      const entry = catalog.find(c => c.name === m.catalogName);
+      if (!entry) continue;
+      try {
+        await penaltyService.create({
+          member_id: m.memberId,
+          penalty_type_id: entry.id,
+          amount: Number(entry.amount),
+          notes: `${session.occasion}: nicht erschienen`,
+          event_id: session.event_id || undefined
+        });
+      } catch (error) {
+        console.error('Failed to create missed penalty:', error);
+        toast.error('Strafe für Nicht-Erschienenen konnte nicht gebucht werden');
+      }
+    }
+    onEnd(results);
   };
 
   const getMemberStatus = (member: Member) => {
@@ -213,12 +202,17 @@ export const CheckInActiveScreen = ({ session, onEnd }: CheckInActiveScreenProps
             </div>
           </div>
         </div>
-        <Button
-          variant="destructive"
-          onClick={() => setShowEndModal(true)}
-        >
-          Check-in beenden
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onLeave}>
+            Verlassen
+          </Button>
+          <Button
+            variant="destructive"
+            onClick={() => setShowEndModal(true)}
+          >
+            Beenden
+          </Button>
+        </div>
       </div>
 
       {/* Members Grid */}
@@ -261,15 +255,19 @@ export const CheckInActiveScreen = ({ session, onEnd }: CheckInActiveScreenProps
         open={showEndModal}
         onOpenChange={setShowEndModal}
         uncheckedMembers={uncheckedMembers}
-        onConfirm={() => onEnd(results)}
+        catalog={catalog}
+        onConfirm={handleEndWithMissed}
       />
 
-      <LateArrivalModal
-        open={showLateModal}
-        onOpenChange={setShowLateModal}
-        member={selectedMember}
-        minutesLate={lateMinutes}
-        onConfirm={handleLateArrival}
+      <EditCheckInModal
+        open={!!editResult}
+        onOpenChange={(open) => { if (!open) { setEditMember(null); setEditResult(null); } }}
+        member={editMember}
+        result={editResult}
+        session={session}
+        latePenaltyType={latePenaltyType}
+        onSaved={(updated) => setResults(prev => prev.map(r => r.id === updated.id ? updated : r))}
+        onCheckedOut={(removed) => setResults(prev => prev.filter(r => r.id !== removed.id))}
       />
     </div>
   );

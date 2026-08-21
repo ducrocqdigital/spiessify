@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn, Settings } from 'lucide-react';
+import { Trophy, Medal, Award, Filter, Users, Euro, Calendar, LogIn, Shield } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
 import { Member, Penalty } from '@/types';
@@ -220,7 +220,7 @@ const PublicDashboard = () => {
                       onClick={() => navigate('/admin')}
                       className="flex items-center gap-2"
                     >
-                      <Settings className="w-4 h-4" />
+                      <Shield className="w-4 h-4" />
                       Admin
                     </Button>
                   )}

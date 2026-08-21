@@ -51,11 +51,7 @@ const PenaltyManagement = () => {
   });
 
   useEffect(() => {
-    const isAdmin = localStorage.getItem('isAdmin') === 'true';
-    if (!isAdmin) {
-      navigate('/');
-      return;
-    }
+    // Route access is enforced by ProtectedRoute (chargierte/oberadmin)
     loadData();
   }, [navigate]);
 
@@ -290,7 +286,7 @@ const PenaltyManagement = () => {
                 Neue Strafe
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Neue Strafe hinzufügen</DialogTitle>
                 <DialogDescription>
@@ -564,7 +560,7 @@ const PenaltyManagement = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Strafe bearbeiten</DialogTitle>
             <DialogDescription>

@@ -163,6 +163,66 @@ export const inspectionService = {
     return data as InspectionResult;
   },
 
+  // Create penalties from the part-based inspection (Teil + Zustand).
+  // Idempotent: penalties from an earlier save are replaced.
+  async createPenaltiesFromParts(
+    sessionId: string,
+    memberId: string,
+    partStates: { partLabel: string; stateLabel: string; catalogEntry: any }[]
+  ): Promise<void> {
+    const { data: activeEvent } = await supabase.rpc('get_active_event');
+    const activeEventId = activeEvent && activeEvent.length > 0 ? activeEvent[0].id : null;
+
+    const { data: existingResult, error: resultError } = await supabase
+      .from('inspection_results')
+      .select('penalty_ids')
+      .eq('session_id', sessionId)
+      .eq('member_id', memberId)
+      .maybeSingle();
+
+    if (resultError) throw resultError;
+
+    const oldPenaltyIds: string[] = existingResult?.penalty_ids || [];
+    if (oldPenaltyIds.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('penalties')
+        .delete()
+        .in('id', oldPenaltyIds);
+      if (deleteError) throw deleteError;
+    }
+
+    const inserts = partStates
+      .filter(ps => ps.catalogEntry)
+      .map(ps => ({
+        member_id: memberId,
+        penalty_type_id: ps.catalogEntry.id,
+        amount: Number(ps.catalogEntry.amount),
+        multiplier: 1,
+        notes: `Musterung: ${ps.partLabel} – ${ps.stateLabel}`,
+        date: localDateString(),
+        event_id: activeEventId
+      }));
+
+    let newPenaltyIds: string[] = [];
+    if (inserts.length > 0) {
+      const { data: created, error } = await supabase
+        .from('penalties')
+        .insert(inserts)
+        .select('id');
+
+      if (error) throw error;
+      newPenaltyIds = (created || []).map(row => row.id);
+    }
+
+    const { error: updateError } = await supabase
+      .from('inspection_results')
+      .update({ penalty_ids: newPenaltyIds })
+      .eq('session_id', sessionId)
+      .eq('member_id', memberId);
+
+    if (updateError) throw updateError;
+  },
+
   // Create penalties based on inspection failures.
   // Idempotent: penalties created by an earlier save of the same
   // member in the same session are deleted first (no double booking).

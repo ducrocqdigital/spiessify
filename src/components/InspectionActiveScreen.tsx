@@ -8,21 +8,25 @@ import { User, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { inspectionService, INSPECTION_CATEGORIES } from '@/services/inspectionService';
 import { penaltyCatalogService } from '@/services/penaltyCatalogService';
+import { penaltyService } from '@/services/penaltyService';
 import { InspectionResult, InspectionSession, Member, InspectionData } from '@/types';
+import { partsForMember, catalogEntryFor, STATE_LABELS, PartState } from '@/services/uniformParts';
 import { useToast } from '@/hooks/use-toast';
 import { InspectionDetailScreen } from './InspectionDetailScreen';
 
 interface InspectionActiveScreenProps {
   session: InspectionSession;
   onEnd: () => void;
+  onLeave: () => void;
 }
 
-export const InspectionActiveScreen = ({ session, onEnd }: InspectionActiveScreenProps) => {
+export const InspectionActiveScreen = ({ session, onEnd, onLeave }: InspectionActiveScreenProps) => {
   const [members, setMembers] = useState<Member[]>([]);
   const [inspectionResults, setInspectionResults] = useState<InspectionResult[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [endModalOpen, setEndModalOpen] = useState(false);
+  const [missedSelections, setMissedSelections] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -79,13 +83,27 @@ export const InspectionActiveScreen = ({ session, onEnd }: InspectionActiveScree
   const handleInspectionSave = async (memberId: string, inspectionData: InspectionData) => {
     try {
       const penaltyCatalog = await penaltyCatalogService.getActive();
-      
-      // Create penalties for any failures
-      await inspectionService.createPenaltiesFromInspection(
-        session.id, 
-        memberId, 
-        inspectionData, 
-        penaltyCatalog
+
+      // Part-based format: { parts: { partKey: state } }
+      const member = members.find(m => m.id === memberId);
+      const partsDef = member ? partsForMember(member) : [];
+      const partsMap = ((inspectionData as any).parts || {}) as Record<string, PartState>;
+      const partStates = Object.entries(partsMap)
+        .map(([key, state]) => {
+          const part = partsDef.find(pd => pd.key === key);
+          if (!part) return null;
+          return {
+            partLabel: part.label,
+            stateLabel: STATE_LABELS[state],
+            catalogEntry: catalogEntryFor(part, state, penaltyCatalog)
+          };
+        })
+        .filter(Boolean) as { partLabel: string; stateLabel: string; catalogEntry: any }[];
+
+      await inspectionService.createPenaltiesFromParts(
+        session.id,
+        memberId,
+        partStates
       );
 
       // Update the inspection result
@@ -120,6 +138,24 @@ export const InspectionActiveScreen = ({ session, onEnd }: InspectionActiveScree
 
   const confirmEndInspection = async () => {
     try {
+      // Strafen für Nicht-Erschienene buchen (Schnellauswahl)
+      const selectedIds = Object.entries(missedSelections).filter(([, v]) => v).map(([id]) => id);
+      if (selectedIds.length > 0) {
+        const catalog = await penaltyCatalogService.getActive();
+        const missedType = catalog.find(c => c.name === 'Verpasste Abnahme');
+        if (missedType) {
+          for (const memberId of selectedIds) {
+            await penaltyService.create({
+              member_id: memberId,
+              penalty_type_id: missedType.id,
+              amount: Number(missedType.amount),
+              notes: `${session.anlass}: nicht erschienen`,
+              event_id: session.event_id || undefined
+            });
+          }
+        }
+      }
+
       await inspectionService.endActiveSession();
       setEndModalOpen(false);
       onEnd();
@@ -176,13 +212,18 @@ export const InspectionActiveScreen = ({ session, onEnd }: InspectionActiveScree
             <span className="text-orange-600 font-medium">Offen {stats.offen}</span>
           </div>
         </div>
-        <Button
-          variant="outline"
-          onClick={handleEndInspection}
-          className="border-red-500 text-red-600 hover:bg-red-50"
-        >
-          Musterung beenden
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={onLeave}>
+            Verlassen
+          </Button>
+          <Button
+            variant="outline"
+            onClick={handleEndInspection}
+            className="border-red-500 text-red-600 hover:bg-red-50"
+          >
+            Beenden
+          </Button>
+        </div>
       </div>
 
       {/* Members Grid */}
@@ -250,18 +291,32 @@ export const InspectionActiveScreen = ({ session, onEnd }: InspectionActiveScree
           <DialogHeader>
             <DialogTitle>Musterung beenden</DialogTitle>
             <DialogDescription>
-              {offenMembers.length > 0 ? (
-                <>
-                  Es sind noch {offenMembers.length} Schützen offen:
-                  <div className="mt-2 text-sm text-muted-foreground">
-                    {offenMembers.map(member => memberService.getDisplayName(member)).join(', ')}
-                  </div>
-                </>
-              ) : (
-                "Alle Schützen wurden gemustert. Musterung kann beendet werden."
-              )}
+              {offenMembers.length > 0
+                ? `Noch ${offenMembers.length} Schützen offen. Antippen bucht "Verpasste Abnahme" (10€):`
+                : "Alle Schützen wurden gemustert. Musterung kann beendet werden."}
             </DialogDescription>
           </DialogHeader>
+          {offenMembers.length > 0 && (
+            <div className="max-h-64 overflow-y-auto space-y-1.5">
+              {offenMembers.map(member => {
+                const selected = !!missedSelections[member.id];
+                return (
+                  <button
+                    key={member.id}
+                    type="button"
+                    onClick={() => setMissedSelections(prev => ({ ...prev, [member.id]: !prev[member.id] }))}
+                    className={`w-full flex items-center justify-between rounded-lg border-2 px-3 py-2 text-sm font-medium transition-all
+                      ${selected ? 'border-red-500 bg-red-50 text-red-700' : 'border-border bg-card hover:bg-muted/50'}`}
+                  >
+                    <span>{memberService.getDisplayName(member)}</span>
+                    <span className="text-xs font-normal">
+                      {selected ? 'Verpasste Abnahme · 10€' : 'keine Strafe'}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setEndModalOpen(false)}>
               Zurück

@@ -134,27 +134,16 @@ export const memberService = {
 
   // Get member with penalty statistics (for authenticated users)
   async getMembersWithStats(): Promise<Member[]> {
-    const { data, error } = await supabase
-      .from('members')
-      .select(`
-        *,
-        penalties!inner(
-          amount
-        )
-      `);
+    // Uses the event-aware RPC: active event only, otherwise all-time
+    const { data, error } = await supabase.rpc('get_members_with_public_stats');
 
     if (error) throw error;
 
-    // Calculate stats for each member
-    return (data || []).map(member => {
-      const penalties = member.penalties || [];
-      return {
-        ...member,
-        totalPenalties: penalties.length,
-        totalAmount: penalties.reduce((sum: number, p: any) => sum + Number(p.amount), 0),
-        penalties: undefined // Remove the raw penalties data
-      };
-    });
+    return (data || []).map((m: any) => ({
+      ...m,
+      totalPenalties: Number(m.total_penalties),
+      totalAmount: Number(m.total_amount)
+    })) as Member[];
   },
 
   // SECURE: Get member statistics for public leaderboard (no sensitive data)

@@ -98,6 +98,7 @@ export interface InspectionSession {
   start_time: string;
   end_time?: string;
   is_active: boolean;
+  event_id?: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -99,13 +99,13 @@ const AdminDashboard = () => {
     loadDashboardData();
   }, [navigate]);
 
-  const loadDashboardData = async () => {
+  const loadDashboardData = async (autoEnterInspection = true) => {
     try {
       // Check for active inspection session first
       const activeSession = await inspectionService.getActiveSession();
-      if (activeSession) {
+      setActiveInspectionSession(activeSession);
+      if (activeSession && autoEnterInspection) {
         setInspectionActive(true);
-        setActiveInspectionSession(activeSession);
         return; // Don't load other data if inspection is active
       }
 
@@ -357,7 +357,7 @@ const AdminDashboard = () => {
     setInspectionActive(false);
     setActiveInspectionSession(null);
     // Refresh dashboard data
-    loadDashboardData();
+    loadDashboardData(false);
   };
 
   const handleLogout = async () => {
@@ -393,6 +393,10 @@ const AdminDashboard = () => {
           <InspectionActiveScreen
             session={activeInspectionSession}
             onEnd={handleEndInspection}
+            onLeave={() => {
+              setInspectionActive(false);
+              loadDashboardData(false);
+            }}
           />
         </div>
       </div>
@@ -427,6 +431,7 @@ const AdminDashboard = () => {
           <CheckInActiveScreen
             session={activeCheckinSession}
             onEnd={handleEndCheckIn}
+            onLeave={() => setCheckInActive(false)}
           />
         </div>
       </div>
@@ -461,6 +466,28 @@ const AdminDashboard = () => {
       <div className="container mx-auto px-4 py-6 space-y-6">
         {/* Event Header */}
         <EventHeader />
+
+        {/* Paused sessions */}
+        {activeCheckinSession && !checkInActive && (
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium">
+              Check-in läuft: {activeCheckinSession.occasion} (Referenz {new Date(activeCheckinSession.reference_time).toTimeString().slice(0, 5)})
+            </div>
+            <Button size="sm" onClick={() => setCheckInActive(true)}>
+              Fortsetzen
+            </Button>
+          </div>
+        )}
+        {activeInspectionSession && !inspectionActive && (
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center justify-between">
+            <div className="text-sm font-medium">
+              Musterung läuft: {activeInspectionSession.anlass}
+            </div>
+            <Button size="sm" onClick={() => setInspectionActive(true)}>
+              Fortsetzen
+            </Button>
+          </div>
+        )}
         
         {/* Quick Actions */}
         <Card>

@@ -1,5 +1,23 @@
 import { supabase } from '@/integrations/supabase/client';
 import { CheckinSession, CheckinResult } from '@/types';
+import { penaltyService } from '@/services/penaltyService';
+
+// Find the late-arrival catalog entry (same lookup the old modal used)
+export function findLatePenaltyType(catalog: any[]): any | undefined {
+  return catalog.find(
+    pt => pt.name.toLowerCase().includes('verspätung') ||
+          pt.category === 'timing' ||
+          pt.name.toLowerCase().includes('zu spät')
+  );
+}
+
+// Standard amount for X minutes late (1 EUR/min fallback)
+export function computeLateAmount(latePenaltyType: any | undefined, minutesLate: number): number {
+  if (!latePenaltyType) return minutesLate * 1;
+  const base = Number(latePenaltyType.amount);
+  return latePenaltyType.has_multiplier ? base * minutesLate : base;
+}
+
 
 export const checkinService = {
   // Start a new check-in session (reference time as full timestamp)
@@ -76,6 +94,68 @@ export const checkinService = {
         is_on_time: minutesLate <= 0,
         penalty_id: penaltyId
       })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  // Correct a check-in: new arrival time and/or new penalty amount.
+  // Creates, updates or deletes the linked penalty as needed.
+  async updateCheckIn(
+    session: CheckinSession,
+    result: CheckinResult,
+    newCheckTime: Date,
+    amount: number,
+    latePenaltyType: any | undefined
+  ): Promise<CheckinResult> {
+    const referenceTime = new Date(session.reference_time);
+    const minutesLate = Math.max(0, Math.floor((newCheckTime.getTime() - referenceTime.getTime()) / 60000));
+    const isOnTime = minutesLate <= 0;
+
+    let penaltyId: string | null = result.penalty_id || null;
+
+    if (isOnTime) {
+      // Now on time: remove an existing penalty
+      if (penaltyId) {
+        const { error } = await supabase.from('penalties').delete().eq('id', penaltyId);
+        if (error) throw error;
+        penaltyId = null;
+      }
+    } else if (penaltyId) {
+      // Still late: update amount and note
+      const { error } = await supabase
+        .from('penalties')
+        .update({
+          amount,
+          multiplier: latePenaltyType?.has_multiplier ? minutesLate : 1,
+          notes: `${session.occasion}: +${minutesLate} Min.`
+        })
+        .eq('id', penaltyId);
+      if (error) throw error;
+    } else if (latePenaltyType) {
+      // Was on time, is now late: create penalty
+      const penalty = await penaltyService.create({
+        member_id: result.member_id,
+        penalty_type_id: latePenaltyType.id,
+        amount,
+        multiplier: latePenaltyType?.has_multiplier ? minutesLate : 1,
+        notes: `${session.occasion}: +${minutesLate} Min.`,
+        event_id: session.event_id || undefined
+      });
+      penaltyId = penalty.id;
+    }
+
+    const { data, error } = await supabase
+      .from('checkin_results')
+      .update({
+        check_time: newCheckTime.toISOString(),
+        minutes_late: minutesLate,
+        is_on_time: isOnTime,
+        penalty_id: penaltyId
+      })
+      .eq('id', result.id)
       .select()
       .single();
 

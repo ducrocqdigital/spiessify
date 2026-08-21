@@ -174,7 +174,7 @@ const PenaltyCatalogManagement = () => {
               Neue Strafart
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Neue Strafart hinzufügen</DialogTitle>
               <DialogDescription>
@@ -316,7 +316,7 @@ const PenaltyCatalogManagement = () => {
 
       {/* Edit Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Strafart bearbeiten</DialogTitle>
             <DialogDescription>
