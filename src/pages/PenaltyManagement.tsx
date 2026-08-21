@@ -16,6 +16,7 @@ import { memberService } from '@/services/memberService';
 import { Penalty, Member, PenaltyCatalog, PENALTY_CATALOG_CATEGORIES } from '@/types';
 import { Plus, Edit2, ArrowLeft, Trash2, Euro, Settings, Filter, Calendar, Users } from 'lucide-react';
 import { formatDateTime } from '@/utils/dateUtils';
+import { localDateString } from '@/lib/dates';
 
 const PenaltyManagement = () => {
   const navigate = useNavigate();
@@ -45,7 +46,7 @@ const PenaltyManagement = () => {
     member_id: '',
     penalty_type_id: '',
     amount: 0,
-    date: new Date().toISOString().split('T')[0],
+    date: localDateString(),
     notes: ''
   });
 
@@ -139,7 +140,7 @@ const PenaltyManagement = () => {
       member_id: '',
       penalty_type_id: '',
       amount: 0,
-      date: new Date().toISOString().split('T')[0],
+      date: localDateString(),
       notes: ''
     });
   };
@@ -166,7 +167,7 @@ const PenaltyManagement = () => {
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Strafe konnte nicht hinzugefügt werden.",
+        description: error instanceof Error ? error.message : "Strafe konnte nicht hinzugefügt werden.",
         variant: "destructive",
       });
     }

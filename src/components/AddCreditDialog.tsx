@@ -9,6 +9,7 @@ import { Member, PenaltyCatalog } from '@/types';
 import { penaltyService } from '@/services/penaltyService';
 import { memberService } from '@/services/memberService';
 import { useToast } from '@/hooks/use-toast';
+import { localDateString } from '@/lib/dates';
 
 interface AddCreditDialogProps {
   open: boolean;
@@ -65,7 +66,7 @@ export const AddCreditDialog = ({ open, onOpenChange, members, penaltyTypes, onC
         member_id: formData.memberId,
         penalty_type_id: creditPenaltyType.id,
         amount: -parseFloat(formData.amount), // Negative amount for credit
-        date: new Date().toISOString().split('T')[0], // Today's date
+        date: localDateString(), // Today's date
         notes: formData.notes || 'Gutschrift'
       });
 
@@ -81,7 +82,7 @@ export const AddCreditDialog = ({ open, onOpenChange, members, penaltyTypes, onC
       console.error('Error adding credit:', error);
       toast({
         title: "Fehler",
-        description: "Die Gutschrift konnte nicht hinzugefügt werden.",
+        description: error instanceof Error ? error.message : "Die Gutschrift konnte nicht hinzugefügt werden.",
         variant: "destructive",
       });
     } finally {

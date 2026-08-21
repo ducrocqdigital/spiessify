@@ -10,6 +10,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Trophy, Medal, Award, Euro, Calendar, User } from 'lucide-react';
 import { penaltyService } from '@/services/penaltyService';
+import { supabase } from '@/integrations/supabase/client';
 import { userService } from '@/services/userService';
 import { formatDateTime } from '@/utils/dateUtils';
 import { useAuth } from '@/hooks/useAuth';
@@ -53,7 +54,23 @@ export const PersonDetailModal = ({
   const loadPenalties = async () => {
     setLoading(true);
     try {
-      // Load penalties for all users (public and internal)
+      if (!isInternal) {
+        // Public users: direct table access is blocked, use the public RPC
+        const { data, error } = await supabase.rpc('get_member_penalties_public', {
+          p_member_id: member.id
+        });
+        if (error) throw error;
+        setPenalties((data || []).map((p: any) => ({
+          id: p.id,
+          amount: p.amount,
+          multiplier: p.multiplier,
+          date: p.penalty_date,
+          created_time: p.created_time,
+          penalty_type: { name: p.penalty_type_name }
+        })));
+        return;
+      }
+
       const penaltiesData = await penaltyService.getByMemberId(member.id);
       
       if (isInternal) {

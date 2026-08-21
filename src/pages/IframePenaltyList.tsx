@@ -2,12 +2,13 @@ import { useState, useEffect } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { memberService } from '@/services/memberService';
 import { penaltyService } from '@/services/penaltyService';
+import { supabase } from '@/integrations/supabase/client';
 import { Penalty, Member } from '@/types';
 import { formatDateTime } from '@/utils/dateUtils';
 
 const IframePenaltyList = () => {
   const [penalties, setPenalties] = useState<any[]>([]);
-  const [members, setMembers] = useState<Member[]>([]);
+  const [memberStats, setMemberStats] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,12 +17,13 @@ const IframePenaltyList = () => {
 
   const loadData = async () => {
     try {
-      const [penaltiesData, membersData] = await Promise.all([
+      const [penaltiesData, statsData] = await Promise.all([
         penaltyService.getRecentPublic(50, 0),
-        memberService.getActive()
+        supabase.rpc('get_members_with_public_stats')
       ]);
+      if (statsData.error) throw statsData.error;
       setPenalties(penaltiesData);
-      setMembers(membersData);
+      setMemberStats(statsData.data || []);
     } catch (error) {
       console.error('Failed to load data:', error);
     } finally {
@@ -29,26 +31,17 @@ const IframePenaltyList = () => {
     }
   };
 
+  // Totals come from the database (all penalties), not just the last 50
   const getLeaderboard = () => {
-    const memberPenalties = members.map(member => {
-      const memberPenaltiesData = penalties.filter(p => 
-        (p.member_first_name === member.first_name && p.member_last_name === member.last_name) ||
-        (p.member_nickname && p.member_nickname === member.nickname)
-      );
-      const totalAmount = memberPenaltiesData.reduce((sum, p) => sum + Number(p.amount), 0);
-      const totalCount = memberPenaltiesData.length;
-      
-      return {
-        member,
-        totalAmount,
-        totalCount
-      };
-    })
-    .filter(item => item.totalAmount > 0)
-    .sort((a, b) => b.totalAmount - a.totalAmount)
-    .slice(0, 10);
-    
-    return memberPenalties;
+    return memberStats
+      .filter((m: any) => m.is_active && Number(m.total_amount) > 0)
+      .map((m: any) => ({
+        member: m as Member,
+        totalAmount: Number(m.total_amount),
+        totalCount: Number(m.total_penalties)
+      }))
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .slice(0, 10);
   };
 
   if (loading) {

@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { InspectionSession, InspectionResult, InspectionData } from '@/types';
+import { localDateString } from '@/lib/dates';
 
 // Inspection categories and items
 export const INSPECTION_CATEGORIES = {
@@ -162,54 +163,83 @@ export const inspectionService = {
     return data as InspectionResult;
   },
 
-  // Create penalties based on inspection failures
+  // Create penalties based on inspection failures.
+  // Idempotent: penalties created by an earlier save of the same
+  // member in the same session are deleted first (no double booking).
   async createPenaltiesFromInspection(
     sessionId: string,
     memberId: string,
     inspectionData: InspectionData,
     penaltyCatalog: any[]
   ): Promise<void> {
-    const penaltyPromises: Promise<void>[] = [];
-    
     // Get the active event ID
     const { data: activeEvent } = await supabase.rpc('get_active_event');
     const activeEventId = activeEvent && activeEvent.length > 0 ? activeEvent[0].id : null;
-    
-    // Process penalties with multipliers
+
+    // Remove penalties from a previous save of this inspection
+    const { data: existingResult, error: resultError } = await supabase
+      .from('inspection_results')
+      .select('penalty_ids')
+      .eq('session_id', sessionId)
+      .eq('member_id', memberId)
+      .maybeSingle();
+
+    if (resultError) throw resultError;
+
+    const oldPenaltyIds: string[] = existingResult?.penalty_ids || [];
+    if (oldPenaltyIds.length > 0) {
+      const { error: deleteError } = await supabase
+        .from('penalties')
+        .delete()
+        .in('id', oldPenaltyIds);
+      if (deleteError) throw deleteError;
+    }
+
+    // Collect the penalties to create
+    const inserts: any[] = [];
     Object.entries(inspectionData).forEach(([categoryKey, categoryData]) => {
       Object.entries(categoryData).forEach(([itemKey, multiplier]) => {
         const multiplierValue = multiplier as number;
         if (multiplierValue > 0) {
-          // Find the penalty in catalog by ID (itemKey)
           const matchingPenalty = penaltyCatalog.find(p => p.id === itemKey && p.is_active);
-          
-          if (matchingPenalty) {
-            // Create penalty with multiplier
-            const penaltyPromise = async (): Promise<void> => {
-              const { error } = await supabase
-                .from('penalties')
-                .insert({
-                  member_id: memberId,
-                  penalty_type_id: matchingPenalty.id,
-                  amount: matchingPenalty.amount,
-                  multiplier: multiplierValue,
-                  notes: `Musterung: ${matchingPenalty.name}`,
-                  date: new Date().toISOString().split('T')[0],
-                  event_id: activeEventId
-                });
 
-              if (error) {
-                console.error('Failed to create penalty:', error);
-                throw error;
-              }
-            };
-            
-            penaltyPromises.push(penaltyPromise());
+          if (matchingPenalty) {
+            inserts.push({
+              member_id: memberId,
+              penalty_type_id: matchingPenalty.id,
+              // amount is the total: catalog amount times count
+              amount: Number(matchingPenalty.amount) * multiplierValue,
+              multiplier: multiplierValue,
+              notes: `Musterung: ${matchingPenalty.name}`,
+              date: localDateString(),
+              event_id: activeEventId
+            });
           }
         }
       });
     });
 
-    await Promise.all(penaltyPromises);
+    let newPenaltyIds: string[] = [];
+    if (inserts.length > 0) {
+      const { data: created, error } = await supabase
+        .from('penalties')
+        .insert(inserts)
+        .select('id');
+
+      if (error) {
+        console.error('Failed to create penalties:', error);
+        throw error;
+      }
+      newPenaltyIds = (created || []).map(row => row.id);
+    }
+
+    // Remember which penalties belong to this inspection
+    const { error: updateError } = await supabase
+      .from('inspection_results')
+      .update({ penalty_ids: newPenaltyIds })
+      .eq('session_id', sessionId)
+      .eq('member_id', memberId);
+
+    if (updateError) throw updateError;
   }
 };

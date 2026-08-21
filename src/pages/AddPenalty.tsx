@@ -205,7 +205,7 @@ const AddPenalty = () => {
     } catch (error) {
       toast({
         title: "Fehler",
-        description: "Strafe konnte nicht hinzugefügt werden.",
+        description: error instanceof Error ? error.message : "Strafe konnte nicht hinzugefügt werden.",
         variant: "destructive",
       });
     }

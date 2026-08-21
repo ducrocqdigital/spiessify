@@ -58,14 +58,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           console.log('Session user found, setting timeout to refresh profile');
           setTimeout(async () => {
+            // Keep loading=true until the profile (and thus the roles)
+            // is loaded, so ProtectedRoute does not redirect too early.
             await refreshProfile(session);
+            setLoading(false);
           }, 0);
         } else {
           console.log('No session user, clearing profile');
           setUserProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       }
     );
 

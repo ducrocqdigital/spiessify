@@ -64,10 +64,7 @@ const PublicDashboard = () => {
       
       if (statsError) throw statsError;
       
-      // Get today's penalties to calculate today's amount
-      const todayPenalties = await penaltyService.getToday();
-      const todayAmount = todayPenalties.reduce((sum, p) => sum + Number(p.amount), 0);
-      
+
       // Get recent penalties for the feed
       const recentPenaltiesData = await penaltyService.getRecentPublic(10, 0);
       
@@ -80,7 +77,7 @@ const PublicDashboard = () => {
         totalPenalties: Number(statsData[0]?.total_penalties || 0),
         totalAmount: Number(statsData[0]?.total_amount || 0),
         penaltiesToday: Number(statsData[0]?.penalties_today || 0),
-        todayAmount: todayAmount
+        todayAmount: Number(statsData[0]?.amount_today || 0)
       });
       setRecentPenalties(recentPenaltiesData.map(p => ({
         id: p.id,

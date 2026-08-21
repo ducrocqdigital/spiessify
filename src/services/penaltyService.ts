@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { authService } from './authService';
 import { Penalty } from '@/types';
+import { localDateString } from '@/lib/dates';
 
 // Add new secure public methods
 const securePublicMethods = {
@@ -186,7 +187,7 @@ export const penaltyService = {
 
   // Get penalties for today
   async getToday(): Promise<Penalty[]> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = localDateString();
     
     const { data, error } = await supabase
       .from('penalties')
@@ -226,11 +227,17 @@ export const penaltyService = {
           eventId = activeEvent[0].id;
         }
       }
-      
+
+      // Without an active event a penalty would silently lose its
+      // event assignment (event_id NULL). Refuse instead.
+      if (!eventId) {
+        throw new Error('Kein aktives Event – Strafe kann nicht eingetragen werden. Bitte zuerst ein Event anlegen.');
+      }
+
       const penaltyData = {
         ...penalty,
         event_id: eventId,
-        date: penalty.date || new Date().toISOString().split('T')[0],
+        date: penalty.date || localDateString(),
         created_time: new Date().toISOString(),
         assigned_by_user_id: session?.user?.id || null
       };

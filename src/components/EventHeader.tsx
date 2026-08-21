@@ -21,7 +21,13 @@ export const EventHeader = () => {
   }, []);
 
   if (!activeEvent) {
-    return null;
+    return (
+      <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 mb-4">
+        <div className="text-sm font-medium text-destructive">
+          Kein aktives Event – Zahlen zeigen alle Jahre, neue Strafen können nicht eingetragen werden.
+        </div>
+      </div>
+    );
   }
 
   const formatDateRange = (startDate: string, endDate: string) => {

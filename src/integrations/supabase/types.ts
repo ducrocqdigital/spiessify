@@ -152,6 +152,7 @@ export type Database = {
           id: string
           inspection_data: Json | null
           member_id: string
+          penalty_ids: string[]
           session_id: string
           status: string
           updated_at: string
@@ -161,6 +162,7 @@ export type Database = {
           id?: string
           inspection_data?: Json | null
           member_id: string
+          penalty_ids?: string[]
           session_id: string
           status?: string
           updated_at?: string
@@ -170,6 +172,7 @@ export type Database = {
           id?: string
           inspection_data?: Json | null
           member_id?: string
+          penalty_ids?: string[]
           session_id?: string
           status?: string
           updated_at?: string
@@ -445,6 +448,17 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_member_penalties_public: {
+        Args: { p_limit?: number; p_member_id: string }
+        Returns: {
+          amount: number
+          created_time: string
+          id: string
+          multiplier: number
+          penalty_date: string
+          penalty_type_name: string
+        }[]
+      }
       get_members_with_public_stats: {
         Args: never
         Returns: {
@@ -463,6 +477,7 @@ export type Database = {
       get_public_penalty_stats: {
         Args: never
         Returns: {
+          amount_today: number
           penalties_today: number
           total_amount: number
           total_penalties: number
