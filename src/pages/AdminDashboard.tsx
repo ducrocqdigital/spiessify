@@ -23,6 +23,7 @@ import { CheckInActiveScreen } from '@/components/CheckInActiveScreen';
 import { InspectionStartModal } from '@/components/InspectionStartModal';
 import { InspectionActiveScreen } from '@/components/InspectionActiveScreen';
 import { inspectionService } from '@/services/inspectionService';
+import { checkinService } from '@/services/checkinService';
 import { eventService } from '@/services/eventService';
 import { InspectionSession, Event } from '@/types';
 import { EventHeader } from '@/components/EventHeader';
@@ -54,8 +55,7 @@ const AdminDashboard = () => {
   // Check-in state
   const [checkInActive, setCheckInActive] = useState(false);
   const [checkInStartModalOpen, setCheckInStartModalOpen] = useState(false);
-  const [checkInReferenceTime, setCheckInReferenceTime] = useState('');
-  const [checkInOccasion, setCheckInOccasion] = useState('');
+  const [activeCheckinSession, setActiveCheckinSession] = useState<import('@/types').CheckinSession | null>(null);
   
   // Inspection state
   const [inspectionActive, setInspectionActive] = useState(false);
@@ -82,15 +82,20 @@ const AdminDashboard = () => {
       date: ''
     });
     
-    // Check for active check-in session
-    const savedCheckIn = localStorage.getItem('checkInSession');
-    if (savedCheckIn) {
-      const checkInData = JSON.parse(savedCheckIn);
-      setCheckInActive(true);
-      setCheckInReferenceTime(checkInData.referenceTime);
-      setCheckInOccasion(checkInData.occasion || '');
-    }
-    
+    // Check for active check-in session (stored in DB, survives reloads and device switches)
+    const restoreCheckIn = async () => {
+      try {
+        const session = await checkinService.getActiveSession();
+        if (session) {
+          setActiveCheckinSession(session);
+          setCheckInActive(true);
+        }
+      } catch (error) {
+        console.error('Failed to restore check-in session:', error);
+      }
+    };
+    restoreCheckIn();
+
     loadDashboardData();
   }, [navigate]);
 
@@ -286,33 +291,40 @@ const AdminDashboard = () => {
       setNoEventModalOpen(true);
       return;
     }
-    
-    setCheckInActive(true);
-    setCheckInReferenceTime(referenceTime);
-    setCheckInOccasion(occasion);
-    
-    // Save to localStorage to persist across page reloads
-    localStorage.setItem('checkInSession', JSON.stringify({
-      referenceTime,
-      occasion,
-      startTime: new Date().toISOString()
-    }));
+
+    try {
+      const [hours, minutes] = referenceTime.split(':').map(Number);
+      const refDate = new Date();
+      refDate.setHours(hours, minutes, 0, 0);
+
+      const session = await checkinService.startSession(refDate, occasion, activeEvent.id);
+      setActiveCheckinSession(session);
+      setCheckInActive(true);
+    } catch (error) {
+      console.error('Failed to start check-in session:', error);
+      toast({
+        title: "Fehler",
+        description: "Check-in konnte nicht gestartet werden.",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleEndCheckIn = (checkedMembers: any[]) => {
+  const handleEndCheckIn = async (checkedMembers: any[]) => {
+    try {
+      await checkinService.endActiveSession();
+    } catch (error) {
+      console.error('Failed to end check-in session:', error);
+    }
     setCheckInActive(false);
-    setCheckInReferenceTime('');
-    setCheckInOccasion('');
-    
-    // Clear localStorage
-    localStorage.removeItem('checkInSession');
-    
-    // Here you could process the checked members data
-    // For now, we'll just show a toast
+    setActiveCheckinSession(null);
+
     toast({
       title: "Check-in beendet",
       description: `${checkedMembers.length} Schützen wurden erfasst.`,
     });
+    // Refresh dashboard data
+    loadDashboardData();
   };
 
   const handleStartInspection = async (anlass: string) => {
@@ -349,7 +361,6 @@ const AdminDashboard = () => {
   };
 
   const handleLogout = async () => {
-    localStorage.removeItem('checkInSession'); // Clear check-in session on logout
     await signOut();
     navigate('/');
   };
@@ -389,7 +400,7 @@ const AdminDashboard = () => {
   }
 
   // Show Check-in Active Screen if check-in is active
-  if (checkInActive) {
+  if (checkInActive && activeCheckinSession) {
     return (
       <div className="min-h-screen bg-background">
         {/* Header */}
@@ -414,8 +425,7 @@ const AdminDashboard = () => {
 
         <div className="container mx-auto px-4 py-6">
           <CheckInActiveScreen
-            referenceTime={checkInReferenceTime}
-            occasion={checkInOccasion}
+            session={activeCheckinSession}
             onEnd={handleEndCheckIn}
           />
         </div>

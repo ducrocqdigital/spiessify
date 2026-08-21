@@ -14,6 +14,105 @@ export type Database = {
   }
   public: {
     Tables: {
+      checkin_results: {
+        Row: {
+          check_time: string
+          created_at: string
+          id: string
+          is_on_time: boolean
+          member_id: string
+          minutes_late: number
+          penalty_id: string | null
+          session_id: string
+        }
+        Insert: {
+          check_time?: string
+          created_at?: string
+          id?: string
+          is_on_time?: boolean
+          member_id: string
+          minutes_late?: number
+          penalty_id?: string | null
+          session_id: string
+        }
+        Update: {
+          check_time?: string
+          created_at?: string
+          id?: string
+          is_on_time?: boolean
+          member_id?: string
+          minutes_late?: number
+          penalty_id?: string | null
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_results_member_id_fkey"
+            columns: ["member_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_results_penalty_id_fkey"
+            columns: ["penalty_id"]
+            isOneToOne: false
+            referencedRelation: "penalties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "checkin_results_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "checkin_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      checkin_sessions: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          event_id: string | null
+          id: string
+          is_active: boolean
+          occasion: string
+          reference_time: string
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          is_active?: boolean
+          occasion: string
+          reference_time: string
+          start_time?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          event_id?: string | null
+          id?: string
+          is_active?: boolean
+          occasion?: string
+          reference_time?: string
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkin_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -334,7 +433,7 @@ export type Database = {
     }
     Functions: {
       get_active_event: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           created_at: string
           end_date: string
@@ -347,7 +446,7 @@ export type Database = {
         }[]
       }
       get_members_with_public_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           family_name_particle: string
           first_name: string
@@ -362,7 +461,7 @@ export type Database = {
         }[]
       }
       get_public_penalty_stats: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           penalties_today: number
           total_amount: number
@@ -393,18 +492,12 @@ export type Database = {
           user_id: string
         }[]
       }
-      has_role: {
-        Args: { _role: string; _user_id: string }
-        Returns: boolean
-      }
+      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       link_user_to_member_on_signup: {
         Args: { _is_oberadmin?: boolean; _member_id: string; _user_id: string }
         Returns: undefined
       }
-      user_can_manage_members: {
-        Args: Record<PropertyKey, never>
-        Returns: boolean
-      }
+      user_can_manage_members: { Args: never; Returns: boolean }
     }
     Enums: {
       member_rank:

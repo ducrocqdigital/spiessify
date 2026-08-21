@@ -151,3 +151,25 @@ export interface UserProfile {
 }
 
 export type UserPermission = 'oberadmin' | 'chargierte' | 'schuetze';
+export interface CheckinSession {
+  id: string;
+  occasion: string;
+  reference_time: string;
+  start_time: string;
+  end_time?: string | null;
+  is_active: boolean;
+  event_id?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CheckinResult {
+  id: string;
+  session_id: string;
+  member_id: string;
+  check_time: string;
+  minutes_late: number;
+  is_on_time: boolean;
+  penalty_id?: string | null;
+  created_at: string;
+}
