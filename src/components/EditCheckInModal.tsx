@@ -161,21 +161,31 @@ export const EditCheckInModal = ({
             )}
           </div>
 
-          <div className="flex items-center justify-between gap-2 pt-2">
+          <div className="flex flex-col-reverse gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               variant={confirmCheckout ? 'destructive' : 'outline'}
               onClick={handleCheckout}
               disabled={saving}
+              className="w-full sm:w-auto"
             >
               {confirmCheckout
                 ? (result.penalty_id ? 'Wirklich? Strafe wird gelöscht' : 'Wirklich auschecken?')
                 : 'Auschecken'}
             </Button>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={saving}>
+              <Button
+                variant="outline"
+                onClick={() => onOpenChange(false)}
+                disabled={saving}
+                className="flex-1 sm:flex-none"
+              >
                 Abbrechen
               </Button>
-              <Button onClick={handleSave} disabled={saving || !timeValue}>
+              <Button
+                onClick={handleSave}
+                disabled={saving || !timeValue}
+                className="flex-1 sm:flex-none"
+              >
                 Speichern
               </Button>
             </div>
