@@ -49,9 +49,6 @@ export function partsForMember(member: Member): UniformPart[] {
   const parts: UniformPart[] = [
     // Kopf
     { key: 'hut', label: 'Hut', zone: 'kopf' },
-    isChargierter
-      ? { key: 'hutkordel_gold', label: 'Goldene Hutkordel', zone: 'kopf' }
-      : { key: 'hutkordel_gruen', label: 'Grüne Hutkordel', zone: 'kopf' },
     { key: 'feder', label: 'Feder', zone: 'kopf' },
     { key: 'kokarde', label: 'Kokarde', zone: 'kopf' },
 

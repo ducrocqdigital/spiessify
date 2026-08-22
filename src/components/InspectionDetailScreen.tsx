@@ -146,7 +146,7 @@ export const InspectionDetailScreen = ({
                     key={part.key}
                     type="button"
                     onClick={() => handlePartTap(part)}
-                    className={`rounded-lg border-2 px-2 py-2.5 text-sm font-medium transition-all text-center leading-tight
+                    className={`flex h-16 flex-col items-center justify-center rounded-lg border-2 px-2 text-sm font-medium transition-all text-center leading-tight
                       ${state
                         ? 'border-red-500 bg-red-50 text-red-700'
                         : 'border-border bg-card hover:bg-muted/50'}`}
