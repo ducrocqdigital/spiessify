@@ -20,6 +20,8 @@ import PenaltyTable from '@/components/PenaltyTable';
 import { AddCreditDialog } from '@/components/AddCreditDialog';
 import { CheckInStartModal } from '@/components/CheckInStartModal';
 import { CheckInActiveScreen } from '@/components/CheckInActiveScreen';
+import { CheckInEndModal, MissedChoice } from '@/components/CheckInEndModal';
+import { InspectionEndModal } from '@/components/InspectionEndModal';
 import { InspectionStartModal } from '@/components/InspectionStartModal';
 import { InspectionActiveScreen } from '@/components/InspectionActiveScreen';
 import { inspectionService } from '@/services/inspectionService';
@@ -56,11 +58,18 @@ const AdminDashboard = () => {
   const [checkInActive, setCheckInActive] = useState(false);
   const [checkInStartModalOpen, setCheckInStartModalOpen] = useState(false);
   const [activeCheckinSession, setActiveCheckinSession] = useState<import('@/types').CheckinSession | null>(null);
-  
+
   // Inspection state
   const [inspectionActive, setInspectionActive] = useState(false);
   const [inspectionStartModalOpen, setInspectionStartModalOpen] = useState(false);
   const [activeInspectionSession, setActiveInspectionSession] = useState<InspectionSession | null>(null);
+
+  // Beenden direkt aus dem Dashboard-Banner (ohne die aktive Ansicht zu öffnen)
+  const [endCheckInFromBannerOpen, setEndCheckInFromBannerOpen] = useState(false);
+  const [endCheckInUnchecked, setEndCheckInUnchecked] = useState<any[]>([]);
+  const [endCheckInCatalog, setEndCheckInCatalog] = useState<any[]>([]);
+  const [endInspectionFromBannerOpen, setEndInspectionFromBannerOpen] = useState(false);
+  const [endInspectionOffen, setEndInspectionOffen] = useState<any[]>([]);
   
   // Event state
   const [noEventModalOpen, setNoEventModalOpen] = useState(false);
@@ -360,6 +369,127 @@ const AdminDashboard = () => {
     loadDashboardData(false);
   };
 
+  // "Beenden" im Check-in-Banner: offene Schützen laden, dann denselben End-Dialog zeigen
+  const openEndCheckInFromBanner = async () => {
+    if (!activeCheckinSession) return;
+    try {
+      const [activeMembers, sessionResults, catalog] = await Promise.all([
+        memberService.getActive(),
+        checkinService.getSessionResults(activeCheckinSession.id),
+        penaltyCatalogService.getActive()
+      ]);
+      setEndCheckInUnchecked(
+        activeMembers.filter(m => !sessionResults.some(r => r.member_id === m.id))
+      );
+      setEndCheckInCatalog(catalog);
+      setEndCheckInFromBannerOpen(true);
+    } catch (error) {
+      console.error('Failed to prepare check-in end:', error);
+      toast({
+        title: "Fehler",
+        description: "Check-in-Stand konnte nicht geladen werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmEndCheckInFromBanner = async (missed: MissedChoice[]) => {
+    if (!activeCheckinSession) return;
+    for (const m of missed) {
+      if (!m.catalogName) continue;
+      const entry = endCheckInCatalog.find(c => c.name === m.catalogName);
+      if (!entry) continue;
+      try {
+        await penaltyService.create({
+          member_id: m.memberId,
+          penalty_type_id: entry.id,
+          amount: Number(entry.amount),
+          notes: `${activeCheckinSession.occasion}: nicht erschienen`,
+          event_id: activeCheckinSession.event_id || undefined
+        });
+      } catch (error) {
+        console.error('Failed to create missed penalty:', error);
+        toast({
+          title: "Fehler",
+          description: "Strafe für Nicht-Erschienenen konnte nicht gebucht werden.",
+          variant: "destructive",
+        });
+      }
+    }
+    try {
+      await checkinService.endActiveSession();
+    } catch (error) {
+      console.error('Failed to end check-in session:', error);
+    }
+    setActiveCheckinSession(null);
+    setCheckInActive(false);
+    toast({
+      title: "Check-in beendet",
+      description: "Der Check-in wurde abgeschlossen.",
+    });
+    loadDashboardData(false);
+  };
+
+  // "Beenden" im Musterungs-Banner: offene Schützen laden, dann denselben End-Dialog zeigen
+  const openEndInspectionFromBanner = async () => {
+    if (!activeInspectionSession) return;
+    try {
+      const [membersData, resultsData] = await Promise.all([
+        memberService.getActive(),
+        inspectionService.getSessionResults(activeInspectionSession.id)
+      ]);
+      const gemustertIds = new Set(
+        resultsData.filter(r => r.status === 'gemustert').map(r => r.member_id)
+      );
+      setEndInspectionOffen(membersData.filter(m => !gemustertIds.has(m.id)));
+      setEndInspectionFromBannerOpen(true);
+    } catch (error) {
+      console.error('Failed to prepare inspection end:', error);
+      toast({
+        title: "Fehler",
+        description: "Musterungs-Stand konnte nicht geladen werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const confirmEndInspectionFromBanner = async (selectedIds: string[]) => {
+    if (!activeInspectionSession) return;
+    try {
+      if (selectedIds.length > 0) {
+        const catalog = await penaltyCatalogService.getActive();
+        const missedType = catalog.find(c => c.name === 'Verpasste Abnahme');
+        if (missedType) {
+          for (const memberId of selectedIds) {
+            await penaltyService.create({
+              member_id: memberId,
+              penalty_type_id: missedType.id,
+              amount: Number(missedType.amount),
+              notes: `${activeInspectionSession.anlass}: nicht erschienen`,
+              event_id: activeInspectionSession.event_id || undefined
+            });
+          }
+        }
+      }
+      await inspectionService.endActiveSession();
+      setEndInspectionFromBannerOpen(false);
+      setActiveInspectionSession(null);
+      setInspectionActive(false);
+      toast({
+        title: "Musterung beendet",
+        description: "Die Musterung wurde erfolgreich beendet.",
+      });
+      loadDashboardData(false);
+    } catch (error) {
+      console.error('Failed to end inspection:', error);
+      toast({
+        title: "Fehler",
+        description: "Die Musterung konnte nicht beendet werden.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleLogout = async () => {
     await signOut();
     navigate('/');
@@ -469,23 +599,33 @@ const AdminDashboard = () => {
 
         {/* Paused sessions */}
         {activeCheckinSession && !checkInActive && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-medium">
               Check-in läuft: {activeCheckinSession.occasion} (Referenz {new Date(activeCheckinSession.reference_time).toTimeString().slice(0, 5)})
             </div>
-            <Button size="sm" onClick={() => setCheckInActive(true)}>
-              Fortsetzen
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50" onClick={openEndCheckInFromBanner}>
+                Beenden
+              </Button>
+              <Button size="sm" onClick={() => setCheckInActive(true)}>
+                Fortsetzen
+              </Button>
+            </div>
           </div>
         )}
         {activeInspectionSession && !inspectionActive && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex items-center justify-between">
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 flex flex-wrap items-center justify-between gap-2">
             <div className="text-sm font-medium">
               Musterung läuft: {activeInspectionSession.anlass}
             </div>
-            <Button size="sm" onClick={() => setInspectionActive(true)}>
-              Fortsetzen
-            </Button>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" className="border-red-500 text-red-600 hover:bg-red-50" onClick={openEndInspectionFromBanner}>
+                Beenden
+              </Button>
+              <Button size="sm" onClick={() => setInspectionActive(true)}>
+                Fortsetzen
+              </Button>
+            </div>
           </div>
         )}
         
@@ -773,6 +913,21 @@ const AdminDashboard = () => {
         open={inspectionStartModalOpen}
         onOpenChange={setInspectionStartModalOpen}
         onStart={handleStartInspection}
+      />
+
+      {/* Beenden aus dem Banner: gleiche Dialoge wie in den aktiven Ansichten */}
+      <CheckInEndModal
+        open={endCheckInFromBannerOpen}
+        onOpenChange={setEndCheckInFromBannerOpen}
+        uncheckedMembers={endCheckInUnchecked}
+        catalog={endCheckInCatalog}
+        onConfirm={confirmEndCheckInFromBanner}
+      />
+      <InspectionEndModal
+        open={endInspectionFromBannerOpen}
+        onOpenChange={setEndInspectionFromBannerOpen}
+        offenMembers={endInspectionOffen}
+        onConfirm={confirmEndInspectionFromBanner}
       />
 
       {/* No Event Modal */}

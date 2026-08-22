@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { User, ArrowLeft, CheckCircle2, Clock } from 'lucide-react';
 import { memberService } from '@/services/memberService';
 import { inspectionService, INSPECTION_CATEGORIES } from '@/services/inspectionService';
@@ -13,6 +12,7 @@ import { InspectionResult, InspectionSession, Member, InspectionData } from '@/t
 import { partsForMember, catalogEntryFor, STATE_LABELS, PartState } from '@/services/uniformParts';
 import { useToast } from '@/hooks/use-toast';
 import { InspectionDetailScreen } from './InspectionDetailScreen';
+import { InspectionEndModal } from './InspectionEndModal';
 
 interface InspectionActiveScreenProps {
   session: InspectionSession;
@@ -26,7 +26,6 @@ export const InspectionActiveScreen = ({ session, onEnd, onLeave }: InspectionAc
   const [loading, setLoading] = useState(true);
   const [selectedMember, setSelectedMember] = useState<Member | null>(null);
   const [endModalOpen, setEndModalOpen] = useState(false);
-  const [missedSelections, setMissedSelections] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   useEffect(() => {
@@ -136,10 +135,9 @@ export const InspectionActiveScreen = ({ session, onEnd, onLeave }: InspectionAc
     setEndModalOpen(true);
   };
 
-  const confirmEndInspection = async () => {
+  const confirmEndInspection = async (selectedIds: string[]) => {
     try {
       // Strafen für Nicht-Erschienene buchen (Schnellauswahl)
-      const selectedIds = Object.entries(missedSelections).filter(([, v]) => v).map(([id]) => id);
       if (selectedIds.length > 0) {
         const catalog = await penaltyCatalogService.getActive();
         const missedType = catalog.find(c => c.name === 'Verpasste Abnahme');
@@ -286,50 +284,12 @@ export const InspectionActiveScreen = ({ session, onEnd, onLeave }: InspectionAc
       </div>
 
       {/* End Inspection Modal */}
-      <Dialog open={endModalOpen} onOpenChange={setEndModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Musterung beenden</DialogTitle>
-            <DialogDescription>
-              {offenMembers.length > 0
-                ? `Noch ${offenMembers.length} Schützen offen. Antippen bucht "Verpasste Abnahme" (10€):`
-                : "Alle Schützen wurden gemustert. Musterung kann beendet werden."}
-            </DialogDescription>
-          </DialogHeader>
-          {offenMembers.length > 0 && (
-            <div className="max-h-64 overflow-y-auto space-y-1.5">
-              {offenMembers.map(member => {
-                const selected = !!missedSelections[member.id];
-                return (
-                  <button
-                    key={member.id}
-                    type="button"
-                    onClick={() => setMissedSelections(prev => ({ ...prev, [member.id]: !prev[member.id] }))}
-                    className={`w-full flex items-center justify-between rounded-lg border-2 px-3 py-2 text-sm font-medium transition-all
-                      ${selected ? 'border-red-500 bg-red-50 text-red-700' : 'border-border bg-card hover:bg-muted/50'}`}
-                  >
-                    <span>{memberService.getDisplayName(member)}</span>
-                    <span className="text-xs font-normal">
-                      {selected ? 'Verpasste Abnahme · 10€' : 'keine Strafe'}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEndModalOpen(false)}>
-              Zurück
-            </Button>
-            <Button 
-              onClick={confirmEndInspection}
-              className="bg-red-500 hover:bg-red-600 text-white"
-            >
-              Beenden
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <InspectionEndModal
+        open={endModalOpen}
+        onOpenChange={setEndModalOpen}
+        offenMembers={offenMembers}
+        onConfirm={confirmEndInspection}
+      />
     </div>
   );
 };
